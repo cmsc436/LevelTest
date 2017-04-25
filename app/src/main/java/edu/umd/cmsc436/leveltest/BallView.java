@@ -1,0 +1,454 @@
+package edu.umd.cmsc436.leveltest;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PathMeasure;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.TypedValue;
+import android.view.View;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/**
+ * We use this for drawing the ball (and, eventually, concentric circles) in the level Test.
+ */
+public class BallView extends View {
+
+    // The Paint instance used to draw the ball that the user moves around the screen
+    private Paint ballPaint;
+    // The Paint instance used to draw the concentric circles on the screen. The color
+    // attribute of this will be changed to green for drawing the outermost concentric circle
+    // in which the center of the ball lies; however, all other circles will be black.
+    private Paint circlePaint;
+    // The Paint instance used to draw the path output generated.
+    private Paint pathPaint;
+    // The Paint instance used to draw the heatmap output generated.
+    private Paint heatmapGridPaint;
+
+    // Colors used to shade in ScreenGridRegions on the heatmap, in decreasing intensity.
+    private int HEATMAP_MAXFREQ_COLOR = Color.rgb(255, 20, 20);
+    private int HEATMAP_75FREQ_COLOR = Color.rgb(255, 70, 70);
+    private int HEATMAP_50FREQ_COLOR = Color.rgb(255, 120, 120);
+    private int HEATMAP_25FREQ_COLOR = Color.rgb(255, 170, 170);
+    private int HEATMAP_MINFREQ_COLOR = Color.rgb(255, 220, 220);
+
+    // various dimension/etc. attributes of the ball, concentric circles, and ScreenGridRegions.
+    // these are initialized in onLayout() so that they can be scaled depending on the observed
+    // view size (which isn't obtainable until onLayout() is called by the system)
+    private float BALL_SIZE, CIRCLE_RADIUS_DISTANCE, BALL_OFFSET_DISTANCE;
+    private int GRID_REGION_SIZE;
+    private double MAX_VISIBLE_CIRCLE_RADIUS;
+
+    // The line thickness of the circle and path Paint instances.
+    private final float CIRCLE_STROKE_WIDTH = 3;
+    private final float PATH_STROKE_WIDTH = 20;
+
+    // The x and y positions of the ball on the screen, initialized to sane values before
+    // the ball is first drawn.
+    private float ballX = -1;
+    private float ballY = -1;
+    // The acceleration of the ball measured along the x and y axes.
+    private double ax = 0;
+    private double ay = 0;
+
+    // The width, height, and half-width and half-height properties of this view.
+    // Will be set to their final values in onLayout().
+    private int VIEW_WIDTH;
+    private int VIEW_HEIGHT;
+    private float HALF_VIEW_WIDTH;
+    private float HALF_VIEW_HEIGHT;
+    // The effective boundaries of the ball's positions (taking into account the size of the ball).
+    // Will be set to their final values in onLayout().
+    private float WIDTH_BOUND;
+    private float HEIGHT_BOUND;
+
+    // The "running mean" of the average displacement of the ball from the center of the screen.
+    private double ballPositionMeasurementRunningMean;
+    // The number of ball positions that have been sampled thus far.
+    private int ballPositionMeasurementCount;
+    // An ArrayList of the sampled ball positions thus far in the format [x1, y1, x2, y2, ...]
+    private ArrayList<Float> ballPositions;
+
+    // Various flag variables indicating what's happening with the display.
+    public boolean displayingPath, displayingHeatmap, displayingNothingTemporarily, pathMade;
+    private boolean countdownNotHappening;
+
+    // The Path instance used to create the ball path.
+    private Path ballPath;
+
+    // An array used to track the time the ball spends in each circle. Might have a few errors.
+    private long[] timeSpentInCircles;
+
+    // The total number of circles contained within the BallView.
+    private int totalNumCircles;
+
+    // The multiplier used for manipulating how fast the ball moves based on acceleration.
+    private double ACCELERATION_MULTIPLIER = 6;
+    private int center = 0;
+
+    // Instance of the LevelActivity in which this BallView is contained. Used here for
+    // triggering events within the LevelActivity (via LevelActivity.startCountdownTimer()
+    // and LevelActivity.stopCountdownTimer()).
+    private LevelActivity LevelActivity;
+
+    public BallView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        ballPaint = new Paint();
+        ballPaint.setColor(Color.RED);
+        circlePaint = new Paint();
+        circlePaint.setColor(Color.BLACK);
+        circlePaint.setStyle(Paint.Style.STROKE);
+        circlePaint.setStrokeWidth(CIRCLE_STROKE_WIDTH);
+        pathPaint = new Paint();
+        pathPaint.setColor(Color.CYAN);
+        pathPaint.setStyle(Paint.Style.STROKE);
+        pathPaint.setStrokeWidth(PATH_STROKE_WIDTH);
+        heatmapGridPaint = new Paint();
+        heatmapGridPaint.setStyle(Paint.Style.FILL);
+        ballPositions = new ArrayList<>();
+        ballPositionMeasurementRunningMean = 0;
+        ballPositionMeasurementCount = 0;
+        pathMade = false;
+        displayingPath = false;
+        displayingHeatmap = false;
+        // Used to indicate the temporary state between the test finishing and output being drawn
+        displayingNothingTemporarily = false;
+        ballPath = new Path();
+        countdownNotHappening = true;
+
+    }
+
+    public void setDifficulty(int difficulty) {
+        if (difficulty == 1) {
+            ACCELERATION_MULTIPLIER = 1;
+            center = 5;
+        }else if (difficulty == 2) {
+            ACCELERATION_MULTIPLIER = 4;
+            center = 3;
+        }else if (difficulty == 3) {
+            ACCELERATION_MULTIPLIER = 7;
+            center = 1;
+        }
+
+        Log.i("diff", Integer.toString(difficulty));
+    }
+
+    public void setParentActivity(LevelActivity activity) {
+        this.LevelActivity = activity;
+    }
+
+    private static double getRandomAngle() {
+        return Math.random() * (2 * Math.PI);
+    }
+
+    @Override
+    public void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        // We delay these calculations to here so that width/height info is available
+        super.onLayout(changed, left, top, right, bottom);
+        // Assign important information for drawing in this view
+        VIEW_WIDTH = getWidth();
+        VIEW_HEIGHT = getHeight();
+        HALF_VIEW_WIDTH = VIEW_WIDTH / 2;
+        HALF_VIEW_HEIGHT = VIEW_HEIGHT / 2;
+        BALL_SIZE = VIEW_WIDTH / 32;
+        CIRCLE_RADIUS_DISTANCE = BALL_SIZE;
+        BALL_OFFSET_DISTANCE = CIRCLE_RADIUS_DISTANCE * 10;
+        GRID_REGION_SIZE = Math.round(BALL_SIZE);
+
+        // ... information for drawing the circles
+        /* An explanation of this formula:
+         * Basically, we want to draw circles until we know that the circles will not be visible
+         * on the screen. The farthest circle that would be visible on the screen has a radius
+         * that extends exactly to one of the four corners of the screen (assuming the circles
+         * are all centered at the screen center, which they are here).
+         *
+         * Therefore, we can use the Pythagorean Theorem to calculate this maximum radius,
+         * and then we just draw circles that have radii less than or equal to that.
+         *
+         * (I drew this out on a whiteboard so maybe the picture would explain this better)
+         */
+        MAX_VISIBLE_CIRCLE_RADIUS = Math.sqrt(Math.pow(HALF_VIEW_WIDTH, 2) + Math.pow(HALF_VIEW_HEIGHT, 2));
+
+        totalNumCircles = (int) Math.ceil(MAX_VISIBLE_CIRCLE_RADIUS / CIRCLE_RADIUS_DISTANCE);
+
+        //initialize array, every circle time is set to zero
+        timeSpentInCircles = new long[totalNumCircles];
+        for(int i = 0; i < timeSpentInCircles.length; i++)
+        {
+            timeSpentInCircles[i] = 0;
+        }
+        // ... information for drawing the ball
+        WIDTH_BOUND = VIEW_WIDTH - BALL_SIZE;
+        HEIGHT_BOUND = VIEW_HEIGHT - BALL_SIZE;
+        // The ball's initial position should be in the center of the screen.
+        double angle = getRandomAngle();
+//        Log.i("initial offset angle", String.format("%.3f", angle));
+        ballX = HALF_VIEW_WIDTH + (BALL_OFFSET_DISTANCE * (float) Math.cos(angle));
+        ballY = HALF_VIEW_HEIGHT + (BALL_OFFSET_DISTANCE * (float) Math.sin(angle));
+    }
+
+    public double getBallPositionMeasurementMean() {
+        return ballPositionMeasurementRunningMean;
+    }
+
+    /* Multiplies acceleration by the multiplier, defined by the difficulty level,
+     * to amplify fidgeting, etc. */
+    public void updatePosition(double xAccel, double yAccel) {
+        ax = xAccel * ACCELERATION_MULTIPLIER;
+        ay = yAccel * ACCELERATION_MULTIPLIER;
+        invalidate();
+    }
+
+    public void resetCountdown() {
+        countdownNotHappening = true;
+        ballPositions.clear();
+        ballPositionMeasurementRunningMean = 0;
+        ballPositionMeasurementCount = 0;
+    }
+
+    /* Records the ball's position. Should be called at a regular interval so as to ensure a
+     * consistent sampling of the ball's position. */
+    public void sampleBallPosition() {
+        ballPositions.add(ballX);
+        ballPositions.add(ballY);
+    }
+
+    public void drawOutput(boolean displayHeatmap) {
+        this.displayingPath = !displayHeatmap;
+        this.displayingHeatmap = displayHeatmap;
+        this.displayingNothingTemporarily = false;
+        invalidate();
+    }
+
+    public void drawFinishedView() {
+        this.displayingNothingTemporarily = true;
+        invalidate();
+    }
+
+    private void makeBallPath(){
+        // converts recorded positions of the ball into a path object.
+        if(pathMade){
+            return;
+        }
+
+        ballPath.moveTo(ballPositions.get(0), ballPositions.get(1));
+        for (int i = 2; i < ballPositions.size(); i++) {
+            if (i % 2 == 0) {
+                ballPath.lineTo(ballPositions.get(i), ballPositions.get(i + 1));
+            }
+        }
+        pathMade = true;
+    }
+
+    private void drawBallPath(Canvas canvas) {
+        // Trace the path based on the recorded positions of the ball.
+        if(!pathMade) {
+            makeBallPath();
+        }
+        canvas.drawPath(ballPath, pathPaint);
+    }
+
+    public float getPathLength(){
+        // returns the length of the ball's path in mm, accounts for different displays.
+        if(!pathMade) {
+            makeBallPath();
+        }
+        PathMeasure measure = new PathMeasure(ballPath, false);
+        DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
+        return measure.getLength()/ TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, 1, dm);
+    }
+
+    /** Draws a "heatmap" of the ball's center positions on the screen.
+     *
+     * Our general algorithm:
+     * Divide the view into a set of square regions and color those accordingly based on
+     * how many sampled ball center positions overlapped with those regions.
+     */
+    private void drawBallPositionHeatmap(Canvas canvas) {
+
+        class ScreenGridRegion {
+            // Class defining a region of the screen
+            private int ballPositionFrequency;
+            private float leftBound, topBound;
+
+            private ScreenGridRegion(float leftBound, float topBound) {
+                this.ballPositionFrequency = 0;
+                this.leftBound = leftBound;
+                this.topBound = topBound;
+            }
+            private void incrementPositionFrequency() {
+                ballPositionFrequency++;
+//                Log.i("hi", String.format("%.3f, %.3f --> %d", leftBound, topBound, ballPositionFrequency));
+            }
+        }
+
+        // Define a mapping of top-left bounds of a screen grid region to the ScreenGridRegion
+        // object representing that region. This is easier to use and more efficient than just
+        // storing regions in an unsorted ArrayList or something, as is discussed below.
+        HashMap<ArrayList<Integer>, ScreenGridRegion> topLeftPos2Region = new HashMap<>();
+        for (int x = 0; x < VIEW_WIDTH; x += GRID_REGION_SIZE) {
+            for (int y = 0; y < VIEW_HEIGHT; y += GRID_REGION_SIZE) {
+                ArrayList<Integer> topLeft = new ArrayList<>();
+                topLeft.add(x);
+                topLeft.add(y);
+                topLeftPos2Region.put(topLeft, new ScreenGridRegion(x, y));
+            }
+        }
+        // Go through all sampled ball positions (represented as an ArrayList of the form
+        // [x1 y1 x2 y2 ... xp yp] for p positions) and increment the frequency of the corresponding
+        // screen region accordingly.
+        float px, py;
+        for (int i = 0; i < ballPositions.size(); i+= 2) {
+            /* Use the position of the ball and some math to generate an ArrayList<Integer> key for
+             * the topLeftPos2Region mapping onto screen grid regions. This is much faster than
+             * performing a search through all screen grid regions for every ball position --
+             * the new approach used here is roughly O(c*|positions|) (where c = general cost of
+             * accessing the hash map), while the old approach is O(|regions|*|positions|). */
+            px = ballPositions.get(i);
+            py = ballPositions.get(i + 1);
+            int leftIndexedGridCount = (int) Math.floor(px / GRID_REGION_SIZE);
+            int topIndexedGridCount = (int) Math.floor(py / GRID_REGION_SIZE);
+            ArrayList<Integer> topLeftPosition = new ArrayList<>();
+            topLeftPosition.add(leftIndexedGridCount * GRID_REGION_SIZE);
+            topLeftPosition.add(topIndexedGridCount * GRID_REGION_SIZE);
+            topLeftPos2Region.get(topLeftPosition).incrementPositionFrequency();
+        }
+        /* At this point, we know the position frequencies for every region.
+         * We can go through all the visited regions and color them accordingly.
+         * (First, we fill the screen with the "minimum" color, though: we use white as the
+         * "minimum" color instead of gray because a white background makes it a bit easier to
+         * design sensible heatmap colors.) */
+        canvas.drawRGB(255, 255, 255);
+        for (ScreenGridRegion reg : topLeftPos2Region.values()) {
+            /* These values are arbitrary and mostly based on me playing around with my phone. We
+             * may want to adjust in the future.
+             * (Scaling colorings relative to the maximum position frequency mostly resulted in
+             * hard-to-understand results, since the maximum frequency region tends to be an
+             * outlier. However, it may be worth revisiting that approach in the future.) */
+            int freq = reg.ballPositionFrequency;
+            if (freq > 0) {
+                if (freq > 40)
+                    heatmapGridPaint.setColor(HEATMAP_MAXFREQ_COLOR);
+                else if (freq > 30)
+                    heatmapGridPaint.setColor(HEATMAP_75FREQ_COLOR);
+                else if (freq > 20)
+                    heatmapGridPaint.setColor(HEATMAP_50FREQ_COLOR);
+                else if (freq > 10)
+                    heatmapGridPaint.setColor(HEATMAP_25FREQ_COLOR);
+                else
+                    heatmapGridPaint.setColor(HEATMAP_MINFREQ_COLOR);
+                canvas.drawRect(reg.leftBound, reg.topBound, reg.leftBound + GRID_REGION_SIZE,
+                        reg.topBound + GRID_REGION_SIZE, heatmapGridPaint);
+            }
+        }
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        /* Two broad classes of drawing we can do: either redrawing the ball based on its motion,
+         * or just drawing the path of the ball to show the user (which should only happen once) */
+        super.onDraw(canvas);
+
+        long startTime = System.currentTimeMillis();
+
+        int radius = 0;
+        boolean coloringNotDone = true;
+        boolean coloringJustDone = false;
+        double ballDistanceFromCenter = 0;
+        boolean showingOutput = displayingPath || displayingHeatmap || displayingNothingTemporarily;
+        if (!showingOutput) {
+            // the directionality of x/y acceleration is dependent upon the rotation of the screen.
+            // A TODO here is to detect screen rotation and adjust directionality accordingly.
+            // Also TODO (?): scale ball and circle sizes to screen, so that same amount of circles appears
+            // on any device. will have to account for different aspect ratios.
+            ballX -= ax;
+            ballY += ay;
+            if (ballX < BALL_SIZE) ballX = BALL_SIZE;
+            if (ballY < BALL_SIZE) ballY = BALL_SIZE;
+            if (ballX > WIDTH_BOUND) ballX = WIDTH_BOUND;
+            if (ballY > HEIGHT_BOUND) ballY = HEIGHT_BOUND;
+
+            radius = 0;
+            coloringNotDone = true;
+            coloringJustDone = false;
+            ballDistanceFromCenter = Math.sqrt(
+                    Math.pow(ballX - HALF_VIEW_WIDTH, 2) + Math.pow(ballY - HALF_VIEW_HEIGHT, 2)
+            );
+            if (countdownNotHappening && ballDistanceFromCenter < (CIRCLE_RADIUS_DISTANCE*center)) {
+                /* This set of conditions is true when
+                 * 1) we haven't started the countdown timer yet (because when it starts, the
+                 *    LevelActivity calls BallView.setParentActivity(null);)
+                 * 2) The ball is in the center "circle," and we haven't started the countdown
+                 *    timer yet (so this is the first time we have observed the ball being in the center
+                 *    of the screen) */
+                LevelActivity.startCountdownTimer();
+                countdownNotHappening = false;
+            }
+            else if (!countdownNotHappening && ballDistanceFromCenter >= (CIRCLE_RADIUS_DISTANCE*center)) {
+                LevelActivity.stopCountdownTimer();
+                resetCountdown();
+            }
+
+            /* We just sample every time we redraw the ball. This is generally reasonable -- "quantity"
+             * of position data is really just a means to an end to plot the ball's position, so the
+             * more data the better.
+             * ...ALSO: we only sample the data after the countdown begins (i.e. after the user successfully
+             * navigates the ball to the center circle initially). This prevents the user from ostensibly
+             * missing the center circle forever, which could cause lots of unnecessary data to be
+             * gathered + really complicated paths to be drawn. */
+            if (!countdownNotHappening) {
+                sampleBallPosition();
+                ballPositionMeasurementCount++;
+                ballPositionMeasurementRunningMean =
+                        ((ballPositionMeasurementRunningMean * (ballPositionMeasurementCount - 1))
+                                + ballDistanceFromCenter) / (ballPositionMeasurementCount);
+            }
+        }
+
+        if (displayingPath) {
+            drawBallPath(canvas);
+        }
+        else if (displayingHeatmap) {
+            drawBallPositionHeatmap(canvas);
+        }
+
+        while (radius <= MAX_VISIBLE_CIRCLE_RADIUS) {
+            radius += CIRCLE_RADIUS_DISTANCE;
+            if (!showingOutput && coloringNotDone && ballDistanceFromCenter < radius) {
+                circlePaint.setColor(Color.GREEN);
+                coloringJustDone = true;
+                coloringNotDone = false;
+
+                int currBallCircle = (int) Math.ceil(radius / CIRCLE_RADIUS_DISTANCE);
+                if(currBallCircle <= center){
+                    ballPaint.setColor(Color.GREEN);
+                } else {
+                    ballPaint.setColor(Color.RED);
+                }
+                long endTime = System.currentTimeMillis();
+                long elapsedTime = endTime - startTime;
+
+                /* The time spent in each circle is measured in milliseconds.
+                 * It measures the elapsed time between the start of onDraw and actually figuring
+                 * out what circle the ball is in, and then adding that time to that circle's
+                 * existing time. */
+                timeSpentInCircles[currBallCircle] += elapsedTime;
+
+            }
+            canvas.drawCircle(HALF_VIEW_WIDTH, HALF_VIEW_HEIGHT, radius, circlePaint);
+            if (coloringJustDone) {
+                circlePaint.setColor(Color.BLACK);
+                coloringJustDone = false;
+            }
+        }
+        if (!showingOutput) {
+            canvas.drawCircle(ballX, ballY, BALL_SIZE, ballPaint);
+        }
+    }
+}
