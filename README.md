@@ -2,7 +2,7 @@
 Created as part of CMSC 436 (taught by Prof. Atif Memon) during the
 Spring 2017 semester at the University of Maryland.
 
-##Team 12
+## Team 12
 * Sam Johnson (Team Manager)
 * Marcus Fedarko
 * Ian Savage
