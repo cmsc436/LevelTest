@@ -90,7 +90,7 @@ public class BallView extends View {
 
     // The multiplier used for manipulating how fast the ball moves based on acceleration.
     private double ACCELERATION_MULTIPLIER = 6;
-    private int center = 0;
+    private int center = 1;
 
     // Instance of the LevelActivity in which this BallView is contained. Used here for
     // triggering events within the LevelActivity (via LevelActivity.startCountdownTimer()
