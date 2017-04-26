@@ -102,12 +102,12 @@
         android:layout_alignParentLeft="true"
         android:padding="2dp"
         android:visibility="gone"
-        android:background="@color/colorPrimaryDarkSemiTransparent">
+        android:background="@color/colorAccentLight436">
 
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/colorAccent436"
             android:textSize="25sp"
             android:text="@string/pathOutput"
             android:checked="true"
@@ -115,7 +115,7 @@
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/colorAccent436"
             android:textSize="25sp"
             android:text="@string/heatmapOutput"
             android:id="@+id/heatmapRadioButton"/>
