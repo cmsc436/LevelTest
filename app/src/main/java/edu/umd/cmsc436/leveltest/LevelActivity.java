@@ -7,13 +7,16 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import edu.umd.cmsc436.sheets.Sheets;
 
 import java.util.Locale;
 
@@ -22,7 +25,7 @@ import java.util.Locale;
  * I guess we could consider working that functionality into a HasTimerActivity class or something,
  * but I think this approach is okay for now.
  */
-public class LevelActivity extends AppCompatActivity implements SensorEventListener {
+public class LevelActivity extends AppCompatActivity implements SensorEventListener, Sheets.Host {
 
     private Handler timeHandler;
     private TextView textCountdown, textTimer;
@@ -45,6 +48,15 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     RadioButton diffTwo;
     RadioButton diffThree;
 
+    private static final String spreadsheetId = "1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU";
+    private static final String privateSpreadsheetId = "1icyk8h35QOpsl6o-6RVsHHEGdGgvB5hx7uePo9EKdoo";
+    private Sheets sheet;
+    public static final int LIB_ACCOUNT_NAME_REQUEST_CODE = 1001;
+    public static final int LIB_AUTHORIZATION_REQUEST_CODE = 1002;
+    public static final int LIB_PERMISSION_REQUEST_CODE = 1003;
+    public static final int LIB_PLAY_SERVICES_REQUEST_CODE = 1004;
+    public static final int LIB_CONNECTION_REQUEST_CODE = 1005;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +67,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         diffOne = (RadioButton) findViewById(R.id.diffOne);
         diffTwo = (RadioButton) findViewById(R.id.diffTwo);
         diffThree = (RadioButton) findViewById(R.id.diffThree);
+
+        // Sheets stuff
+        sheet = new Sheets(this, this, getString(R.string.app_name), spreadsheetId, privateSpreadsheetId);
 
         // instance of "this" used for changing registration of this activity as a
         // SensorEventListener from within Runnables
@@ -210,7 +225,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                 intent.putExtra("timeToCenter", timeToMoveToCenter);
                                 String option = intent.getStringExtra("option");
                                 setResult(RESULT_OK, intent);
-                                finish();
+                                sendToSheets();
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -283,5 +298,56 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     public void onBackPressed() {
         Intent intent = new Intent(this, LevelActivity.class);
         startActivity(intent);
+    }
+
+    private void sendToSheets() {
+        String userId = "t12pDiddy";
+        float[] trials = {1.23f, 4.56f, 7.89f};
+        float average = 0.0f;
+
+        for (float trial : trials) {
+          average += trial;
+        }
+        average /= trials.length;
+
+        sheet.writeData(Sheets.TestType.LH_LEVEL, userId, average);
+        sheet.writeTrials(Sheets.TestType.LH_LEVEL, userId, trials);
+    }
+
+    @Override
+    public int getRequestCode(Sheets.Action action) {
+        switch (action) {
+            case REQUEST_ACCOUNT_NAME:
+                return LIB_ACCOUNT_NAME_REQUEST_CODE;
+            case REQUEST_AUTHORIZATION:
+                return LIB_AUTHORIZATION_REQUEST_CODE;
+            case REQUEST_PERMISSIONS:
+                return LIB_PERMISSION_REQUEST_CODE;
+            case REQUEST_PLAY_SERVICES:
+                return LIB_PLAY_SERVICES_REQUEST_CODE;
+            case REQUEST_CONNECTION_RESOLUTION:
+                return LIB_CONNECTION_REQUEST_CODE;
+            default:
+                return -1;
+        }
+    }
+
+    @Override
+    public void notifyFinished(Exception e) {
+        if (e != null) {
+            throw new RuntimeException(e);
+        }
+        Log.i(getClass().getSimpleName(), "Done");
+    }
+
+    @Override
+    public void onRequestPermissionsResult (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+      this.sheet.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+      super.onActivityResult(requestCode, resultCode, data);
+      this.sheet.onActivityResult(requestCode, resultCode, data);
     }
 }
