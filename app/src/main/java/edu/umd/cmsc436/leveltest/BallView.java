@@ -85,6 +85,12 @@ public class BallView extends View {
     // An array used to track the time the ball spends in each circle. Might have a few errors.
     private long[] timeSpentInCircles;
 
+    // number of times countdown has been restarted
+    private int attempts;
+
+    // ArrayList storing old paths
+    private ArrayList<Path> oldPaths;
+
     // The total number of circles contained within the BallView.
     private int totalNumCircles;
 
@@ -114,6 +120,8 @@ public class BallView extends View {
         ballPositions = new ArrayList<>();
         ballPositionMeasurementRunningMean = 0;
         ballPositionMeasurementCount = 0;
+        attempts = 0;
+        oldPaths = new ArrayList<>();
         pathMade = false;
         displayingPath = false;
         displayingHeatmap = false;
@@ -207,6 +215,7 @@ public class BallView extends View {
 
     public void resetCountdown() {
         countdownNotHappening = true;
+        storePath();
         ballPositions.clear();
         ballPositionMeasurementRunningMean = 0;
         ballPositionMeasurementCount = 0;
@@ -246,6 +255,18 @@ public class BallView extends View {
         pathMade = true;
     }
 
+    private void clearBallPath(){
+        ballPath.reset();
+        pathMade = false;
+    }
+
+    private void storePath(){
+        makeBallPath();
+        oldPaths.add(new Path(ballPath));
+        attempts++;
+        clearBallPath();
+    }
+
     private void drawBallPath(Canvas canvas) {
         // Trace the path based on the recorded positions of the ball.
         if(!pathMade) {
@@ -255,13 +276,39 @@ public class BallView extends View {
     }
 
     public float getPathLength(){
-        // returns the length of the ball's path in mm, accounts for different displays.
+        // returns final successful path length
+        return getPathLength(ballPath);
+    }
+
+    public float getPathLength(Path path){
+        // returns the length of the path in mm, accounts for different displays.
         if(!pathMade) {
             makeBallPath();
         }
-        PathMeasure measure = new PathMeasure(ballPath, false);
+        PathMeasure measure = new PathMeasure(path, false);
         DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
         return measure.getLength()/ TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, 1, dm);
+    }
+
+    public double getTotalPathLength(){
+        // combines unsuccessful and successful path lengths
+        double totalLength = 0;
+        for(Path path : oldPaths){
+            totalLength += getPathLength(path);
+        }
+        totalLength += getPathLength();
+        return totalLength;
+    }
+
+    public double getAveragePathLengths(){
+        return getTotalPathLength()/(attempts + 1);
+    }
+
+    public void drawAllPaths(Canvas canvas){
+        canvas.drawPath(ballPath, pathPaint);
+        for(Path path : oldPaths){
+            canvas.drawPath(path, pathPaint);
+        }
     }
 
     /** Draws a "heatmap" of the ball's center positions on the screen.
@@ -388,6 +435,10 @@ public class BallView extends View {
                  *    timer yet (so this is the first time we have observed the ball being in the center
                  *    of the screen) */
                 LevelActivity.startCountdownTimer();
+                storePath();
+                ballPositions.clear();
+                ballPositionMeasurementRunningMean = 0;
+                ballPositionMeasurementCount = 0;
                 countdownNotHappening = false;
             }
             else if (!countdownNotHappening && ballDistanceFromCenter >= (CIRCLE_RADIUS_DISTANCE*center)) {
@@ -402,13 +453,11 @@ public class BallView extends View {
              * navigates the ball to the center circle initially). This prevents the user from ostensibly
              * missing the center circle forever, which could cause lots of unnecessary data to be
              * gathered + really complicated paths to be drawn. */
-            if (!countdownNotHappening) {
-                sampleBallPosition();
-                ballPositionMeasurementCount++;
-                ballPositionMeasurementRunningMean =
-                        ((ballPositionMeasurementRunningMean * (ballPositionMeasurementCount - 1))
-                                + ballDistanceFromCenter) / (ballPositionMeasurementCount);
-            }
+            sampleBallPosition();
+            ballPositionMeasurementCount++;
+            ballPositionMeasurementRunningMean =
+                    ((ballPositionMeasurementRunningMean * (ballPositionMeasurementCount - 1))
+                            + ballDistanceFromCenter) / (ballPositionMeasurementCount);
         }
 
         if (displayingPath) {

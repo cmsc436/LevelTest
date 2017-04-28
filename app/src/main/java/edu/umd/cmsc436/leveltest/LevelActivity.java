@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -198,6 +199,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 findViewById(R.id.levelOutputRadioGroup).setVisibility(View.VISIBLE);
                 findViewById(R.id.levelOutputButton).setVisibility(View.VISIBLE);
                 Button done_button = (Button)findViewById(R.id.done_button);
+//                Toast.makeText(LevelActivity.this, Double.valueOf(ballView.getAveragePathLengths()).toString(), Toast.LENGTH_SHORT).show();
                 done_button.setOnClickListener(
                         new View.OnClickListener() {
                             @Override
