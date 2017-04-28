@@ -91,6 +91,9 @@ public class BallView extends View {
     // ArrayList storing old paths
     private ArrayList<Path> oldPaths;
 
+    // Arraylist storing old ball positions
+    private ArrayList<Float> oldPositions;
+
     // The total number of circles contained within the BallView.
     private int totalNumCircles;
 
@@ -122,6 +125,7 @@ public class BallView extends View {
         ballPositionMeasurementCount = 0;
         attempts = 0;
         oldPaths = new ArrayList<>();
+        oldPositions = new ArrayList<>();
         pathMade = false;
         displayingPath = false;
         displayingHeatmap = false;
@@ -216,6 +220,7 @@ public class BallView extends View {
     public void resetCountdown() {
         countdownNotHappening = true;
         storePath();
+        oldPositions.addAll(ballPositions);
         ballPositions.clear();
         ballPositionMeasurementRunningMean = 0;
         ballPositionMeasurementCount = 0;
@@ -305,6 +310,9 @@ public class BallView extends View {
     }
 
     public void drawAllPaths(Canvas canvas){
+        if(!pathMade) {
+            makeBallPath();
+        }
         canvas.drawPath(ballPath, pathPaint);
         for(Path path : oldPaths){
             canvas.drawPath(path, pathPaint);
@@ -351,14 +359,15 @@ public class BallView extends View {
         // [x1 y1 x2 y2 ... xp yp] for p positions) and increment the frequency of the corresponding
         // screen region accordingly.
         float px, py;
-        for (int i = 0; i < ballPositions.size(); i+= 2) {
+        oldPositions.addAll(ballPositions);
+        for (int i = 0; i < oldPositions.size(); i+= 2) {
             /* Use the position of the ball and some math to generate an ArrayList<Integer> key for
              * the topLeftPos2Region mapping onto screen grid regions. This is much faster than
              * performing a search through all screen grid regions for every ball position --
              * the new approach used here is roughly O(c*|positions|) (where c = general cost of
              * accessing the hash map), while the old approach is O(|regions|*|positions|). */
-            px = ballPositions.get(i);
-            py = ballPositions.get(i + 1);
+            px = oldPositions.get(i);
+            py = oldPositions.get(i + 1);
             int leftIndexedGridCount = (int) Math.floor(px / GRID_REGION_SIZE);
             int topIndexedGridCount = (int) Math.floor(py / GRID_REGION_SIZE);
             ArrayList<Integer> topLeftPosition = new ArrayList<>();
@@ -436,6 +445,7 @@ public class BallView extends View {
                  *    of the screen) */
                 LevelActivity.startCountdownTimer();
                 storePath();
+                oldPositions.addAll(ballPositions);
                 ballPositions.clear();
                 ballPositionMeasurementRunningMean = 0;
                 ballPositionMeasurementCount = 0;
@@ -461,7 +471,7 @@ public class BallView extends View {
         }
 
         if (displayingPath) {
-            drawBallPath(canvas);
+            drawAllPaths(canvas);
         }
         else if (displayingHeatmap) {
             drawBallPositionHeatmap(canvas);
