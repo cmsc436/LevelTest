@@ -1,4 +1,4 @@
-package edu.umd.cmsc436.leveltest;
+package edu.umd.cmsc436.Level;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
