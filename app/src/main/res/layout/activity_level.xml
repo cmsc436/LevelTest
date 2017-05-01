@@ -4,7 +4,7 @@
     android:id="@+id/activity_level"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.umd.cmsc436.leveltest.LevelActivity">
+    tools:context="edu.umd.cmsc436.Level.LevelActivity">
 
     <TextView android:id="@+id/levelTestDirectionsHeader"
         android:layout_width="wrap_content"
@@ -78,7 +78,7 @@
         android:text=""
         android:visibility="gone" />
 
-    <edu.umd.cmsc436.leveltest.BallView
+    <edu.umd.cmsc436.Level.BallView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ccc"
