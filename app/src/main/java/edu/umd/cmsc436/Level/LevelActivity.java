@@ -335,11 +335,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // the accelerometer sensor)
     }
 
-    @Override
-    public void onBackPressed() {
-        Intent intent = new Intent(this, LevelActivity.class);
-        startActivity(intent);
-    }
+    //@Override
+    //public void onBackPressed() {
+    //    Intent intent = new Intent(this, LevelActivity.class);
+    //    startActivity(intent);
+    //}
 
     private void sendToSheets() {
         String userId = "t12p01";
