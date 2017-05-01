@@ -17,7 +17,7 @@
                 <action android:name="edu.umd.cmsc436.level.action.PRACTICE" />
                 <action android:name="edu.umd.cmsc436.level.action.HELP" />
                 <action android:name="edu.umd.cmsc436.level.action.HISTORY" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
     </application>
