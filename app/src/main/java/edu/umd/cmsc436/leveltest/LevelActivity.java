@@ -103,8 +103,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         actionType = 1;
         Intent incomingIntent = getIntent();
-        if(incomingIntent != null) {
-            String action = getIntent().getAction();
+        String action = incomingIntent.getAction();
+        if (action != null){
             if (action.equals("TRIAL")) {
                 actionType = 3;
             } else if (action.equals("PRACTICE")) {
