@@ -170,7 +170,7 @@ public class BallView extends View {
         HALF_VIEW_HEIGHT = VIEW_HEIGHT / 2;
         BALL_SIZE = VIEW_WIDTH / 32;
         CIRCLE_RADIUS_DISTANCE = BALL_SIZE;
-        BALL_OFFSET_DISTANCE = CIRCLE_RADIUS_DISTANCE * 10;
+        BALL_OFFSET_DISTANCE = CIRCLE_RADIUS_DISTANCE * 11;
         GRID_REGION_SIZE = Math.round(BALL_SIZE);
 
         // ... information for drawing the circles
