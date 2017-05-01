@@ -107,6 +107,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         if (action != null){
             if (action.equals("TRIAL")) {
                 actionType = 3;
+                startlevelTest(textCountdown);
             } else if (action.equals("PRACTICE")) {
                 actionType = 2;
                 startlevelTest(textCountdown);
