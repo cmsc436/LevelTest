@@ -45,6 +45,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private boolean testRunning, countdownStopped, listenerUnregisteredOnPause, activityHasFocus;
     private CountDownTimer countDownTimer;
     private int difficulty;
+    private int actionType;
 
     RadioButton diffOne;
     RadioButton diffTwo;
@@ -99,6 +100,20 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // used to avoid unregistering the listener twice (if the test ends while the app is paused)
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
+
+        actionType = 1;
+        String action = getIntent().getAction();
+        if(action.equals("TRIAL")){
+            actionType = 3;
+        } else if (action.equals("PRACTICE")){
+            actionType = 2;
+            startlevelTest(textCountdown);
+        } else if (action.equals("HELP")){
+            actionType = 1;
+        } else if (action.equals("HISTORY")){
+            actionType = 0;
+        }
+
         findViewById(R.id.levelOutputButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -228,18 +243,22 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                metric = ballView.getTotalPathLength() +
+                                if(actionType == 3) {
+                                    metric = ballView.getTotalPathLength() +
                                             timeSpentInCircle +
-                                            ((System.currentTimeMillis()-testStartTime)/100);
+                                            ((System.currentTimeMillis() - testStartTime) / 100);
 
-                                //remove this intent stuff? -depends on front end
-                                Intent intent = getIntent();
-                                intent.putExtra("data", ballView.getBallPositionMeasurementMean());
-                                intent.putExtra("pathLength", ballView.getPathLength());
-                                intent.putExtra("timeToCenter", timeToMoveToCenter);
-                                String option = intent.getStringExtra("option");
-                                setResult(RESULT_OK, intent);
-                                sendToSheets();
+                                    //remove this intent stuff? -depends on front end
+                                    Intent intent = getIntent();
+                                    intent.putExtra("data", ballView.getBallPositionMeasurementMean());
+                                    intent.putExtra("pathLength", ballView.getPathLength());
+                                    intent.putExtra("timeToCenter", timeToMoveToCenter);
+                                    String option = intent.getStringExtra("option");
+                                    setResult(RESULT_OK, intent);
+                                    sendToSheets();
+                                } else {
+                                    restartTest();
+                                }
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -250,6 +269,10 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             }
         };
         countDownTimer.start();
+    }
+
+    protected void restartTest(){
+        this.recreate();
     }
 
     @Override
