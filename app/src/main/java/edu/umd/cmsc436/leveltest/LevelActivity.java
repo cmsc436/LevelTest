@@ -102,16 +102,19 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         timeLeft = getString(R.string.timeLeft);
 
         actionType = 1;
-        String action = getIntent().getAction();
-        if(action.equals("TRIAL")){
-            actionType = 3;
-        } else if (action.equals("PRACTICE")){
-            actionType = 2;
-            startlevelTest(textCountdown);
-        } else if (action.equals("HELP")){
-            actionType = 1;
-        } else if (action.equals("HISTORY")){
-            actionType = 0;
+        Intent incomingIntent = getIntent();
+        if(incomingIntent != null) {
+            String action = getIntent().getAction();
+            if (action.equals("TRIAL")) {
+                actionType = 3;
+            } else if (action.equals("PRACTICE")) {
+                actionType = 2;
+                startlevelTest(textCountdown);
+            } else if (action.equals("HELP")) {
+                actionType = 1;
+            } else if (action.equals("HISTORY")) {
+                actionType = 0;
+            }
         }
 
         findViewById(R.id.levelOutputButton).setOnClickListener(new View.OnClickListener() {
