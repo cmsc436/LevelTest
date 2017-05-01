@@ -18,6 +18,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import edu.umd.cmsc436.sheets.Sheets;
 
+import android.graphics.Canvas;
+
 import java.util.Locale;
 
 /* NOTE that most of timeTask() and revealTask() were written by Ian for the Tapping Activity,
@@ -47,6 +49,13 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     RadioButton diffOne;
     RadioButton diffTwo;
     RadioButton diffThree;
+
+    //used for visually defining the center
+    Canvas canvas;
+
+    //metric variables
+    double metric;
+    float timeSpentInCircle = 0;
 
     private static final String spreadsheetId = "1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU";
     private static final String privateSpreadsheetId = "1icyk8h35QOpsl6o-6RVsHHEGdGgvB5hx7uePo9EKdoo";
@@ -219,6 +228,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                metric = ballView.getTotalPathLength() +
+                                            timeSpentInCircle +
+                                            ((System.currentTimeMillis()-testStartTime)/100);
+
+                                //remove this intent stuff? -depends on front end
                                 Intent intent = getIntent();
                                 intent.putExtra("data", ballView.getBallPositionMeasurementMean());
                                 intent.putExtra("pathLength", ballView.getPathLength());
@@ -301,17 +315,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     }
 
     private void sendToSheets() {
-        String userId = "t12pDiddy";
-        float[] trials = {1.23f, 4.56f, 7.89f};
-        float average = 0.0f;
+        String userId = "t12p01";
+        float[] trial = {(float) metric};
 
-        for (float trial : trials) {
-          average += trial;
-        }
-        average /= trials.length;
-
-        sheet.writeData(Sheets.TestType.LH_LEVEL, userId, average);
-        sheet.writeTrials(Sheets.TestType.LH_LEVEL, userId, trials);
+        //sheet.writeData(Sheets.TestType.LH_LEVEL, userId, average);
+        sheet.writeTrials(Sheets.TestType.LH_LEVEL, userId, trial);
     }
 
     @Override

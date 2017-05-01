@@ -479,17 +479,18 @@ public class BallView extends View {
 
         while (radius <= MAX_VISIBLE_CIRCLE_RADIUS) {
             radius += CIRCLE_RADIUS_DISTANCE;
+
             if (!showingOutput && coloringNotDone && ballDistanceFromCenter < radius) {
                 circlePaint.setColor(Color.GREEN);
                 coloringJustDone = true;
                 coloringNotDone = false;
 
                 int currBallCircle = (int) Math.ceil(radius / CIRCLE_RADIUS_DISTANCE);
-                if(currBallCircle <= center){
+                /*if(currBallCircle <= center){
                     ballPaint.setColor(Color.GREEN);
                 } else {
                     ballPaint.setColor(Color.RED);
-                }
+                }*/
                 long endTime = System.currentTimeMillis();
                 long elapsedTime = endTime - startTime;
 
@@ -502,6 +503,14 @@ public class BallView extends View {
             }
             canvas.drawCircle(HALF_VIEW_WIDTH, HALF_VIEW_HEIGHT, radius, circlePaint);
             if (coloringJustDone) {
+                Paint centerPaint = new Paint();
+                centerPaint.setColor(Color.GREEN);
+                centerPaint.setAlpha(60);
+                canvas.drawCircle(HALF_VIEW_WIDTH,
+                        HALF_VIEW_HEIGHT,
+                        CIRCLE_RADIUS_DISTANCE*center,
+                        centerPaint);
+
                 circlePaint.setColor(Color.BLACK);
                 coloringJustDone = false;
             }
