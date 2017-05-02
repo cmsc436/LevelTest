@@ -110,7 +110,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // used to avoid unregistering the listener twice (if the test ends while the app is paused)
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
-        actionType = 1;
+        actionType = 2;
 
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
