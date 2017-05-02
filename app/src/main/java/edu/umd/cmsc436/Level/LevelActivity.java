@@ -113,6 +113,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
         actionType = 2;
+        boolean startedTest = false;
 
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
@@ -123,11 +124,12 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
-
+                    startedTest = true;
                     startlevelTest(textCountdown);
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
+                    startedTest = true;
                     startlevelTest(textCountdown);
                     break;
                 case "edu.umd.cmsc436.level.action.HELP":
@@ -137,6 +139,10 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     actionType = 0;
                     break;
             }
+        }
+
+        if(!startedTest && actionType == 2){
+            startlevelTest(textCountdown);
         }
 
         findViewById(R.id.levelOutputButton).setOnClickListener(new View.OnClickListener() {
