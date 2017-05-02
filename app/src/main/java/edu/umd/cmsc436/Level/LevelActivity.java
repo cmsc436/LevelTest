@@ -115,20 +115,29 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
         if (action != null){
-            if (action.equals("TRIAL")) {
-                actionType = 3;
-                trialModePatientID = TrialMode.getPatientId(incomingIntent);
-                trialModeAppendage = TrialMode.getAppendage(incomingIntent);
-                trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
-                startlevelTest(textCountdown);
-            } else if (action.equals("PRACTICE") || actionType == 2) {
-                actionType = 2;
-                startlevelTest(textCountdown);
-            } else if (action.equals("HELP")) {
-                actionType = 1;
-            } else if (action.equals("HISTORY")) {
-                actionType = 0;
+            switch (action) {
+                case "TRIAL":
+                    actionType = 3;
+                    trialModePatientID = TrialMode.getPatientId(incomingIntent);
+                    trialModeAppendage = TrialMode.getAppendage(incomingIntent);
+                    trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
+                    startlevelTest(textCountdown);
+                    break;
+                case "PRACTICE":
+                    actionType = 2;
+                    startlevelTest(textCountdown);
+                    break;
+                case "HELP":
+                    actionType = 1;
+                    break;
+                case "HISTORY":
+                    actionType = 0;
+                    break;
             }
+        }
+
+        if(actionType == 2){
+            startlevelTest(textCountdown);
         }
 
         findViewById(R.id.levelOutputButton).setOnClickListener(new View.OnClickListener() {
