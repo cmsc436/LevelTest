@@ -1,6 +1,5 @@
 package edu.umd.cmsc436.Level;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,6 +19,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import edu.umd.cmsc436.sheets.Sheets;
+import edu.umd.cmsc436.frontendhelper.TrialMode;
 
 import android.graphics.Canvas;
 
@@ -53,6 +53,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private CountDownTimer countDownTimer;
     private int difficulty;
     private int actionType;
+    private String trialModePatientID = null;
+    private Sheets.TestType trialModeAppendage = null;
+    private Integer trialModeDifficulty = null;
 
     RadioButton diffOne;
     RadioButton diffTwo;
@@ -107,13 +110,16 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // used to avoid unregistering the listener twice (if the test ends while the app is paused)
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
-
         actionType = 1;
+
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
         if (action != null){
             if (action.equals("TRIAL")) {
                 actionType = 3;
+                trialModePatientID = TrialMode.getPatientId(incomingIntent);
+                trialModeAppendage = TrialMode.getAppendage(incomingIntent);
+                trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
                 startlevelTest(textCountdown);
             } else if (action.equals("PRACTICE")) {
                 actionType = 2;
@@ -146,14 +152,21 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     }
 
     private void setDifficulty() {
-        if (diffOne.isChecked())
-            difficulty = 1;
-        else if (diffTwo.isChecked())
-            difficulty = 2;
-        else if (diffThree.isChecked())
-            difficulty = 3;
-
-        ballView.setDifficulty(difficulty);
+        if (actionType == 3) {
+            // This is a trial
+            // Use the difficulty received from the frontend's intent
+            ballView.setDifficulty(trialModeDifficulty);
+        }
+        else {
+            // Not a trial, use the checked difficulty if present
+            if (diffOne.isChecked())
+                difficulty = 1;
+            else if (diffTwo.isChecked())
+                difficulty = 2;
+            else if (diffThree.isChecked())
+                difficulty = 3;
+            ballView.setDifficulty(difficulty);
+        }
     }
 
     /* Starts a countdown and, when that's done, starts the level test. */
@@ -340,17 +353,33 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // the accelerometer sensor)
     }
 
+    //@Override
+    //public void onBackPressed() {
+    //    Intent intent = new Intent(this, LevelActivity.class);
+    //    startActivity(intent);
+    //}
+
     private void sendToSheets() {
         String userId = "t12p01";
         float[] trial = {(float) metric};
-        sheet.writeTrials(Sheets.TestType.LH_LEVEL, userId, trial);
 
-        //FORADAM
-        Bitmap bitmap = null;
-        bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-        Date date = new Date();
-        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), bitmap);
-        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), bitmap);
+        //if (actionType == 3) {
+            //sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
+
+            //FORADAM
+            Bitmap bitmap = null;
+            bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+            Date date = new Date();
+            sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), bitmap);
+            sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), bitmap);
+        //}else{
+            // test stuff -- remove for production code, since we only want to send stuff to sheets
+            // if the test is being run as a TRIAL (per the received intent from the front end).
+            //String userId = "t12p01";
+
+            //sheet.writeData(Sheets.TestType.LH_LEVEL, userId, average);
+            sheet.writeTrials(Sheets.TestType.LH_LEVEL, userId, trial);
+        //}
     }
 
     @Override
