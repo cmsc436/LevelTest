@@ -1,6 +1,9 @@
 package edu.umd.cmsc436.Level;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -20,6 +23,10 @@ import edu.umd.cmsc436.sheets.Sheets;
 
 import android.graphics.Canvas;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Date;
 import java.util.Locale;
 
 /* NOTE that most of timeTask() and revealTask() were written by Ian for the Tapping Activity,
@@ -247,22 +254,20 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if(actionType == 3) {
+                                //if(actionType == 3) { ignore for now
                                     metric = ballView.getTotalPathLength() +
                                             timeSpentInCircle +
                                             ((System.currentTimeMillis() - testStartTime) / 100);
 
-                                    //remove this intent stuff? -depends on front end
+                                    //sends intent back to front end
                                     Intent intent = getIntent();
-                                    intent.putExtra("data", ballView.getBallPositionMeasurementMean());
-                                    intent.putExtra("pathLength", ballView.getPathLength());
-                                    intent.putExtra("timeToCenter", timeToMoveToCenter);
-                                    String option = intent.getStringExtra("option");
+                                    intent.putExtra("score", metric);
                                     setResult(RESULT_OK, intent);
+
                                     sendToSheets();
-                                } else {
-                                    restartTest();
-                                }
+                                //} else {
+                                //    restartTest();
+                                //}
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -335,18 +340,17 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // the accelerometer sensor)
     }
 
-    @Override
-    public void onBackPressed() {
-        Intent intent = new Intent(this, LevelActivity.class);
-        startActivity(intent);
-    }
-
     private void sendToSheets() {
         String userId = "t12p01";
         float[] trial = {(float) metric};
-
-        //sheet.writeData(Sheets.TestType.LH_LEVEL, userId, average);
         sheet.writeTrials(Sheets.TestType.LH_LEVEL, userId, trial);
+
+        //FORADAM
+        Bitmap bitmap = null;
+        bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+        Date date = new Date();
+        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), bitmap);
+        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), bitmap);
     }
 
     @Override
