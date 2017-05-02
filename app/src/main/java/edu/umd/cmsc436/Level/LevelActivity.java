@@ -22,12 +22,14 @@ import edu.umd.cmsc436.sheets.Sheets;
 import edu.umd.cmsc436.frontendhelper.TrialMode;
 
 import android.graphics.Canvas;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Date;
 import java.util.Locale;
+import java.util.logging.Level;
 
 /* NOTE that most of timeTask() and revealTask() were written by Ian for the Tapping Activity,
  * and have been repurposed here (don't give me any credit for those parts).
@@ -65,11 +67,13 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     Canvas canvas;
 
     //metric variables
-    double metric;
+    float pathLength;
+    float trialDuration;
+    float metric;
     float timeSpentInCircle = 0;
 
     private static final String spreadsheetId = "1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU";
-    private static final String privateSpreadsheetId = "1icyk8h35QOpsl6o-6RVsHHEGdGgvB5hx7uePo9EKdoo";
+    private static final String privateSpreadsheetId = "1Do1_GR62ZCAn_qhXXVVafG9_3_3Q0c6yXPyQV07nWZQ";
     private Sheets sheet;
     public static final int LIB_ACCOUNT_NAME_REQUEST_CODE = 1001;
     public static final int LIB_AUTHORIZATION_REQUEST_CODE = 1002;
@@ -111,32 +115,35 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
         actionType = 2;
+        boolean startedTest = false;
 
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
         if (action != null){
             switch (action) {
-                case "TRIAL":
+                case "edu.umd.cmsc436.level.action.TRIAL":
                     actionType = 3;
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
+                    startedTest = true;
                     startlevelTest(textCountdown);
                     break;
-                case "PRACTICE":
+                case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
+                    startedTest = true;
                     startlevelTest(textCountdown);
                     break;
-                case "HELP":
+                case "edu.umd.cmsc436.level.action.HELP":
                     actionType = 1;
                     break;
-                case "HISTORY":
+                case "edu.umd.cmsc436.level.action.HISTORY":
                     actionType = 0;
                     break;
             }
         }
 
-        if(actionType == 2){
+        if(!startedTest && actionType == 2){
             startlevelTest(textCountdown);
         }
 
@@ -197,7 +204,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         timeHandler.postDelayed(timeTask, 3000);
         timeHandler.postDelayed(revealTask, 4000);
         textCountdown.setVisibility(View.VISIBLE);
-
     }
 
     private Runnable timeTask = new Runnable() {
@@ -276,10 +282,12 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                //if(actionType == 3) { ignore for now
-                                    metric = ballView.getTotalPathLength() +
+                                if(actionType == 3) { //comment this out to test sheets stuff
+                                    pathLength = (float) ballView.getTotalPathLength();
+                                    trialDuration = (System.currentTimeMillis() - testStartTime) / (float) 1000.00;
+                                    metric = pathLength +
                                             timeSpentInCircle +
-                                            ((System.currentTimeMillis() - testStartTime) / 100);
+                                            trialDuration;
 
                                     //sends intent back to front end
                                     Intent intent = getIntent();
@@ -287,9 +295,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                     setResult(RESULT_OK, intent);
 
                                     sendToSheets();
-                                //} else {
-                                //    restartTest();
-                                //}
+                                } else {
+                                    restartTest();
+                                }
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -369,26 +377,14 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
      //}
 
     private void sendToSheets() {
-        String userId = "t12p01";
-        float[] trial = {(float) metric};
+        float[] trial = {timeSpentInCircle, pathLength, trialDuration, metric};
+        Bitmap bitmap = null;
+        bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+        Date date = new Date();
 
-        //if (actionType == 3) {
-            //sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-
-            //FORADAM
-            Bitmap bitmap = null;
-            bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-            Date date = new Date();
-            sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), bitmap);
-            sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), bitmap);
-        //}else{
-            // test stuff -- remove for production code, since we only want to send stuff to sheets
-            // if the test is being run as a TRIAL (per the received intent from the front end).
-            //String userId = "t12p01";
-
-            //sheet.writeData(Sheets.TestType.LH_LEVEL, userId, average);
-            sheet.writeTrials(Sheets.TestType.LH_LEVEL, userId, trial);
-        //}
+        sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
+        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), bitmap);
+        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), bitmap);
     }
 
     @Override

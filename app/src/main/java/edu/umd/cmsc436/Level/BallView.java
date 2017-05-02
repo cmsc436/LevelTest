@@ -154,7 +154,6 @@ public class BallView extends View {
             center = 3;
         }
 
-        Log.i("diff", Integer.toString(difficulty));
     }
 
     public void setParentActivity(LevelActivity activity) {
