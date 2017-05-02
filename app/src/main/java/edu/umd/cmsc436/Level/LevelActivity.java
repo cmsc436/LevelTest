@@ -121,7 +121,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                 trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
                 startlevelTest(textCountdown);
-            } else if (action.equals("PRACTICE")) {
+            } else if (action.equals("PRACTICE") || actionType == 2) {
                 actionType = 2;
                 startlevelTest(textCountdown);
             } else if (action.equals("HELP")) {
