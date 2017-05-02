@@ -67,11 +67,13 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     Canvas canvas;
 
     //metric variables
-    double metric;
+    float pathLength;
+    float trialDuration;
+    float metric;
     float timeSpentInCircle = 0;
 
     private static final String spreadsheetId = "1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU";
-    private static final String privateSpreadsheetId = "1icyk8h35QOpsl6o-6RVsHHEGdGgvB5hx7uePo9EKdoo";
+    private static final String privateSpreadsheetId = "1Do1_GR62ZCAn_qhXXVVafG9_3_3Q0c6yXPyQV07nWZQ";
     private Sheets sheet;
     public static final int LIB_ACCOUNT_NAME_REQUEST_CODE = 1001;
     public static final int LIB_AUTHORIZATION_REQUEST_CODE = 1002;
@@ -281,9 +283,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                             @Override
                             public void onClick(View v) {
                                 if(actionType == 3) { //comment this out to test sheets stuff
-                                    metric = ballView.getTotalPathLength() +
+                                    pathLength = (float) ballView.getTotalPathLength();
+                                    trialDuration = (System.currentTimeMillis() - testStartTime) / (float) 1000.00;
+                                    metric = pathLength +
                                             timeSpentInCircle +
-                                            ((System.currentTimeMillis() - testStartTime) / 100);
+                                            trialDuration;
 
                                     //sends intent back to front end
                                     Intent intent = getIntent();
@@ -373,7 +377,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
      //}
 
     private void sendToSheets() {
-        float[] trial = {(float) metric};
+        float[] trial = {timeSpentInCircle, pathLength, trialDuration, metric};
         Bitmap bitmap = null;
         bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
         Date date = new Date();
