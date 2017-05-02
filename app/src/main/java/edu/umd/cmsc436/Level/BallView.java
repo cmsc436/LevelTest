@@ -249,6 +249,7 @@ public class BallView extends View {
     public void drawFinishedView() {
         this.displayingNothingTemporarily = true;
         invalidate();
+        // TODO draw the path and heatmap bitmaps here
     }
 
     private void makeBallPath(){
@@ -316,6 +317,8 @@ public class BallView extends View {
     }
 
     public void drawAllPaths(Canvas canvas){
+        // TODO create bitmap here from a canvas?
+        // (do this without needing a canvas to be passed)
         if(!pathMade) {
             makeBallPath();
         }
@@ -332,6 +335,8 @@ public class BallView extends View {
      * how many sampled ball center positions overlapped with those regions.
      */
     private void drawBallPositionHeatmap(Canvas canvas) {
+        // TODO create bitmap here from a canvas?
+        // (do this without needing a canvas to be passed)
 
         class ScreenGridRegion {
             // Class defining a region of the screen
