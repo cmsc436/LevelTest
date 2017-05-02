@@ -146,14 +146,21 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     }
 
     private void setDifficulty() {
-        if (diffOne.isChecked())
-            difficulty = 1;
-        else if (diffTwo.isChecked())
-            difficulty = 2;
-        else if (diffThree.isChecked())
-            difficulty = 3;
-
-        ballView.setDifficulty(difficulty);
+        if (actionType == 3) {
+            // This is a trial
+            // Use the difficulty received from the frontend's intent
+            ballView.setDifficulty(trialModeDifficulty);
+        }
+        else {
+            // Not a trial, use the checked difficulty if present
+            if (diffOne.isChecked())
+                difficulty = 1;
+            else if (diffTwo.isChecked())
+                difficulty = 2;
+            else if (diffThree.isChecked())
+                difficulty = 3;
+            ballView.setDifficulty(difficulty);
+        }
     }
 
     /* Starts a countdown and, when that's done, starts the level test. */

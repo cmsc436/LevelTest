@@ -98,8 +98,8 @@ public class BallView extends View {
     private int totalNumCircles;
 
     // The multiplier used for manipulating how fast the ball moves based on acceleration.
-    private double ACCELERATION_MULTIPLIER = 6;
-    private int center = 1;
+    private double ACCELERATION_MULTIPLIER;
+    private int center;
 
     // Instance of the LevelActivity in which this BallView is contained. Used here for
     // triggering events within the LevelActivity (via LevelActivity.startCountdownTimer()
@@ -146,6 +146,12 @@ public class BallView extends View {
         }else if (difficulty == 3) {
             ACCELERATION_MULTIPLIER = 7;
             center = 1;
+        } else {
+            // Ideally we'd throw an error here, but we're in this sort of weird liminal state where we
+            // haven't been able to test the trial stuff very well yet (which is fine) so for now
+            // we're going to fail gracefully by defaulting to the difficulty level 2 settings.
+            ACCELERATION_MULTIPLIER = 4;
+            center = 3;
         }
 
         Log.i("diff", Integer.toString(difficulty));
