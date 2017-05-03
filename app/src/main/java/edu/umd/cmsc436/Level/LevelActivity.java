@@ -82,7 +82,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     Boolean sentHeatmap;
 
     //boolean for testing if statements
-    boolean testing = true;
+    boolean testing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -304,9 +304,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                     setResult(RESULT_OK, intent);
 
                                     sendToSheets();
-                                } else {
-                                    finish();
                                 }
+
+                                finish();
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
