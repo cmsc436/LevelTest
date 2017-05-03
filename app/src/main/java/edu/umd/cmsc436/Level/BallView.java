@@ -1,11 +1,13 @@
 package edu.umd.cmsc436.Level;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -15,10 +17,13 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 /**
  * We use this for drawing the ball (and, eventually, concentric circles) in the level Test.
  */
-public class BallView extends View {
+public class BallView extends View{
+
+    private boolean debugFirstPaintDone = false;
 
     // The Paint instance used to draw the ball that the user moves around the screen
     private Paint ballPaint;
@@ -30,6 +35,8 @@ public class BallView extends View {
     private Paint pathPaint;
     // The Paint instance used to draw the heatmap output generated.
     private Paint heatmapGridPaint;
+
+    private Canvas exportCanvas;
 
     // Colors used to shade in ScreenGridRegions on the heatmap, in decreasing intensity.
     private int HEATMAP_MAXFREQ_COLOR = Color.rgb(255, 20, 20);
@@ -82,8 +89,21 @@ public class BallView extends View {
     // The Path instance used to create the ball path.
     private Path ballPath;
 
-    // An array used to track the time the ball spends in each circle. Might have a few errors.
+
+    // An array used to track the time the ball spends in each circle.
     private long[] timeSpentInCircles;
+
+
+    private int currCircle = -5, prevCircle = -5;
+
+    long startTime, endTime, elapsedTime;
+
+    private boolean debugCircleTime = true;
+
+    public Bitmap pathBitmap = null;
+    public Bitmap heatmapBitmap = null;
+
+    private boolean finalTimeRecorded = false;
 
     // number of times countdown has been restarted
     private int attempts;
@@ -133,7 +153,6 @@ public class BallView extends View {
         displayingNothingTemporarily = false;
         ballPath = new Path();
         countdownNotHappening = true;
-
     }
 
     public void setDifficulty(int difficulty) {
@@ -196,10 +215,12 @@ public class BallView extends View {
 
         //initialize array, every circle time is set to zero
         timeSpentInCircles = new long[totalNumCircles];
-        for(int i = 0; i < timeSpentInCircles.length; i++)
-        {
+        for (int i = 0; i < timeSpentInCircles.length; i++) {
             timeSpentInCircles[i] = 0;
         }
+
+
+
         // ... information for drawing the ball
         WIDTH_BOUND = VIEW_WIDTH - BALL_SIZE;
         HEIGHT_BOUND = VIEW_HEIGHT - BALL_SIZE;
@@ -246,14 +267,30 @@ public class BallView extends View {
     }
 
     public void drawFinishedView() {
+
+//        drawBallPath(exportCanvas);
+
+//        drawBallPositionHeatmap(exportCanvas);
+
+        pathBitmap = Bitmap.createBitmap(exportCanvas.getWidth(), exportCanvas.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas pathBitmapCanvas = new Canvas(pathBitmap);
+
+        createPathBitmap(pathBitmapCanvas);
+
+        heatmapBitmap = Bitmap.createBitmap(exportCanvas.getWidth(), exportCanvas.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas heatmapBitmapCanvas = new Canvas(heatmapBitmap);
+
+        createHeatmapBitmap(heatmapBitmapCanvas);
+
         this.displayingNothingTemporarily = true;
+
         invalidate();
         // TODO draw the path and heatmap bitmaps here
     }
 
-    private void makeBallPath(){
+    private void makeBallPath() {
         // converts recorded positions of the ball into a path object.
-        if(pathMade){
+        if (pathMade) {
             return;
         }
 
@@ -283,7 +320,25 @@ public class BallView extends View {
         if(!pathMade) {
             makeBallPath();
         }
-        canvas.drawPath(ballPath, pathPaint);
+
+//        if (debugFirstPaintDone == false) {
+        pathBitmap = Bitmap.createBitmap(800, 800, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(pathBitmap);
+
+
+        c.drawPath(ballPath, pathPaint);
+//            canvas.setBitmap(pathBitmap);
+//            c.drawPaint();
+//            canvas.drawPath(ballPath, pathPaint);
+
+
+
+//            debugFirstPaintDone = true;
+
+//            pathBitmap = this.getDrawingCache();
+//        } else {
+//            canvas.drawBitmap(pathBitmap, 0, 0, null);
+//        }
     }
 
     public float getPathLength(){
@@ -326,14 +381,49 @@ public class BallView extends View {
         }
     }
 
-    /** Draws a "heatmap" of the ball's center positions on the screen.
-     *
+
+
+    public void createPathBitmap(Canvas canvas) {
+        if (!pathMade) {
+            makeBallPath();
+        }
+
+        //draw green center circle
+        int radius = 0;
+        canvas.drawRGB(195, 195, 195);
+        Paint centerPaint = new Paint();
+        centerPaint.setColor(Color.GREEN);
+        centerPaint.setAlpha(80);
+        canvas.drawCircle(HALF_VIEW_WIDTH,
+                HALF_VIEW_HEIGHT,
+                CIRCLE_RADIUS_DISTANCE * center,
+                centerPaint);
+
+        //draw concentric circles
+        while (radius <= MAX_VISIBLE_CIRCLE_RADIUS) {
+            radius += CIRCLE_RADIUS_DISTANCE;
+
+            circlePaint.setColor(Color.BLACK);
+            canvas.drawCircle(HALF_VIEW_WIDTH, HALF_VIEW_HEIGHT, radius, circlePaint);
+        }
+
+        //draw path
+        pathPaint.setColor(Color.RED);
+        canvas.drawPath(ballPath, pathPaint);
+        for (Path path : oldPaths) {
+            canvas.drawPath(path, pathPaint);
+        }
+    }
+
+    /**
+     * Draws a "heatmap" of the ball's center positions on the screen.
+     * <p>
      * Our general algorithm:
      * Divide the view into a set of square regions and color those accordingly based on
      * how many sampled ball center positions overlapped with those regions.
      */
-    private void drawBallPositionHeatmap(Canvas canvas) {
-        // TODO create bitmap here with a blank new canvas
+
+    private void createHeatmapBitmap(Canvas canvas) {
         class ScreenGridRegion {
             // Class defining a region of the screen
             private int ballPositionFrequency;
@@ -344,6 +434,7 @@ public class BallView extends View {
                 this.leftBound = leftBound;
                 this.topBound = topBound;
             }
+
             private void incrementPositionFrequency() {
                 ballPositionFrequency++;
 //                Log.i("hi", String.format("%.3f, %.3f --> %d", leftBound, topBound, ballPositionFrequency));
@@ -367,7 +458,7 @@ public class BallView extends View {
         // screen region accordingly.
         float px, py;
         oldPositions.addAll(ballPositions);
-        for (int i = 0; i < oldPositions.size(); i+= 2) {
+        for (int i = 0; i < oldPositions.size(); i += 2) {
             /* Use the position of the ball and some math to generate an ArrayList<Integer> key for
              * the topLeftPos2Region mapping onto screen grid regions. This is much faster than
              * performing a search through all screen grid regions for every ball position --
@@ -387,7 +478,8 @@ public class BallView extends View {
          * (First, we fill the screen with the "minimum" color, though: we use white as the
          * "minimum" color instead of gray because a white background makes it a bit easier to
          * design sensible heatmap colors.) */
-        canvas.drawRGB(255, 255, 255);
+        canvas.drawRGB(195, 195, 195);
+        drawBallPositionHeatmapHelp(canvas);
         for (ScreenGridRegion reg : topLeftPos2Region.values()) {
             /* These values are arbitrary and mostly based on me playing around with my phone. We
              * may want to adjust in the future.
@@ -406,11 +498,36 @@ public class BallView extends View {
                     heatmapGridPaint.setColor(HEATMAP_25FREQ_COLOR);
                 else
                     heatmapGridPaint.setColor(HEATMAP_MINFREQ_COLOR);
+
                 canvas.drawRect(reg.leftBound, reg.topBound, reg.leftBound + GRID_REGION_SIZE,
                         reg.topBound + GRID_REGION_SIZE, heatmapGridPaint);
             }
         }
+
     }
+
+
+    private void drawBallPositionHeatmapHelp(Canvas canvas) {
+        //draw green center circle
+        int radius = 0;
+        Paint centerPaint = new Paint();
+        centerPaint.setColor(Color.GREEN);
+        centerPaint.setAlpha(80);
+        canvas.drawCircle(HALF_VIEW_WIDTH,
+                HALF_VIEW_HEIGHT,
+                CIRCLE_RADIUS_DISTANCE * center,
+                centerPaint);
+
+        //draw concentric circles
+        while (radius <= MAX_VISIBLE_CIRCLE_RADIUS) {
+            radius += CIRCLE_RADIUS_DISTANCE;
+
+            circlePaint.setColor(Color.BLACK);
+            canvas.drawCircle(HALF_VIEW_WIDTH, HALF_VIEW_HEIGHT, radius, circlePaint);
+        }
+    }
+
+
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -418,7 +535,9 @@ public class BallView extends View {
          * or just drawing the path of the ball to show the user (which should only happen once) */
         super.onDraw(canvas);
 
-        long startTime = System.currentTimeMillis();
+
+        exportCanvas = canvas;
+
 
         int radius = 0;
         boolean coloringNotDone = true;
@@ -478,10 +597,26 @@ public class BallView extends View {
         }
 
         if (displayingPath) {
-            drawAllPaths(canvas);
-        }
-        else if (displayingHeatmap) {
-            drawBallPositionHeatmap(canvas);
+//            canvas.drawBitmap(pathBitmap,canvas.getHeight() , canvas.getWidth(), null);
+
+//            pathBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
+//            Canvas pathBitmapCanvas = new Canvas(pathBitmap);
+//
+//            createPathBitmap(pathBitmapCanvas);
+
+            Rect source = new Rect(0, 0, pathBitmap.getWidth(), pathBitmap.getHeight());
+            canvas.drawBitmap(pathBitmap,null , source, null);
+
+//            drawAllPaths(canvas);
+        } else if (displayingHeatmap) {
+
+//            heatmapBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
+//            Canvas heatmapBitmapCanvas = new Canvas(heatmapBitmap);
+//
+//            createHeatmapBitmap(heatmapBitmapCanvas);
+
+            Rect source = new Rect(0, 0, heatmapBitmap.getWidth(), heatmapBitmap.getHeight());
+            canvas.drawBitmap(heatmapBitmap,null , source, null);
         }
 
         while (radius <= MAX_VISIBLE_CIRCLE_RADIUS) {
@@ -492,20 +627,41 @@ public class BallView extends View {
                 coloringJustDone = true;
                 coloringNotDone = false;
 
-                int currBallCircle = (int) Math.ceil(radius / CIRCLE_RADIUS_DISTANCE);
-                /*if(currBallCircle <= center){
-                    ballPaint.setColor(Color.GREEN);
-                } else {
-                    ballPaint.setColor(Color.RED);
-                }*/
-                long endTime = System.currentTimeMillis();
-                long elapsedTime = endTime - startTime;
+                int currBallCircle = (int) Math.floor(radius / CIRCLE_RADIUS_DISTANCE);
+//                if (currBallCircle <= center) {
+//                int currBallCircle = (int) Math.ceil(radius / CIRCLE_RADIUS_DISTANCE);
 
+
+                //Initialize starting time
+                if(prevCircle == -5)
+                {
+                    prevCircle = currBallCircle;
+                    startTime = System.currentTimeMillis();
+                }
+                else if(prevCircle != currBallCircle)
+                {
+                    endTime = System.currentTimeMillis();
+                    elapsedTime = endTime - startTime;
+                    timeSpentInCircles[prevCircle] += elapsedTime;
+
+
+                    //Start new counting down
+                    startTime = System.currentTimeMillis();
+                    prevCircle = currBallCircle;
+                }
                 /* The time spent in each circle is measured in milliseconds.
                  * It measures the elapsed time between the start of onDraw and actually figuring
                  * out what circle the ball is in, and then adding that time to that circle's
                  * existing time. */
-                timeSpentInCircles[currBallCircle] += elapsedTime;
+//                timeSpentInCircles[currBallCircle] += elapsedTime;
+
+                else if (showingOutput && finalTimeRecorded == false) {
+                    endTime = System.currentTimeMillis();
+                    elapsedTime = endTime - startTime;
+                    timeSpentInCircles[prevCircle] += elapsedTime;
+
+                    finalTimeRecorded = true;
+                }
 
             }
             canvas.drawCircle(HALF_VIEW_WIDTH, HALF_VIEW_HEIGHT, radius, circlePaint);
@@ -515,7 +671,7 @@ public class BallView extends View {
                 centerPaint.setAlpha(60);
                 canvas.drawCircle(HALF_VIEW_WIDTH,
                         HALF_VIEW_HEIGHT,
-                        CIRCLE_RADIUS_DISTANCE*center,
+                        CIRCLE_RADIUS_DISTANCE * center,
                         centerPaint);
 
                 circlePaint.setColor(Color.BLACK);

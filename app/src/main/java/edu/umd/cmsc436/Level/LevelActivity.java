@@ -80,6 +80,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     public static final int LIB_PERMISSION_REQUEST_CODE = 1003;
     public static final int LIB_PLAY_SERVICES_REQUEST_CODE = 1004;
     public static final int LIB_CONNECTION_REQUEST_CODE = 1005;
+    Date date;
+    Boolean sentHeatmap;
+
+    //boolean for testing if statements
+    boolean testing = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -261,6 +266,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             public void onFinish() {
                 // Finish test: includes unregistering accelerometer sensor listener
                 testRunning = false;
+                trialDuration = (System.currentTimeMillis() - testStartTime) / (float) 1000.00;
                 String timeFinished = String.format(Locale.US, "%s %d", timeLeft, 0);
                 textTimer.setText(timeFinished);
                 if (activityHasFocus) {
@@ -282,9 +288,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if(actionType == 3) { //comment this out to test sheets stuff
-                                    pathLength = (float) ballView.getTotalPathLength();
-                                    trialDuration = (System.currentTimeMillis() - testStartTime) / (float) 1000.00;
+                                //if(actionType == 3) { //comment this out to test sheets stuff
+                                pathLength = (float) ballView.getTotalPathLength();
                                     metric = pathLength +
                                             timeSpentInCircle +
                                             trialDuration;
@@ -295,9 +300,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                     setResult(RESULT_OK, intent);
 
                                     sendToSheets();
-                                } else {
-                                    restartTest();
-                                }
+                                //} else {
+                                //    restartTest();
+                                //}
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -370,21 +375,26 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // the accelerometer sensor)
     }
 
-     //@Override
-     //public void onBackPressed() {
-     //    Intent intent = new Intent(this, LevelActivity.class);
-     //    startActivity(intent);
-     //}
+     @Override
+     public void onBackPressed() {
+         //updated per front end specification
+         Intent intent = getIntent();
+         setResult(RESULT_CANCELED, intent);
+         finish();
+     }
 
     private void sendToSheets() {
         float[] trial = {timeSpentInCircle, pathLength, trialDuration, metric};
-        Bitmap bitmap = null;
-        bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-        Date date = new Date();
+        date = new Date();
+        sentHeatmap = false;
+
+        if (testing) {
+            trialModeAppendage = Sheets.TestType.LH_LEVEL;
+            trialModePatientID = "test";
+        }
 
         sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), bitmap);
-        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), bitmap);
+        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), ballView.pathBitmap);
     }
 
     @Override
@@ -409,6 +419,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     public void notifyFinished(Exception e) {
         if (e != null) {
             throw new RuntimeException(e);
+        }
+
+        if (!sentHeatmap) {
+            sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), ballView.heatmapBitmap);
+            sentHeatmap = true;
         }
         Log.i(getClass().getSimpleName(), "Done");
     }
