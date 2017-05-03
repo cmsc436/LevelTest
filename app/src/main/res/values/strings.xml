@@ -1,16 +1,17 @@
 <resources>
     <string name="app_name">LevelTest</string>
 
-    <string name="startTest">Start Test</string>
+    <string name="startTest">Start</string>
     <string name="timeLeft">Time Left: </string>
     <string name="ready">Get ready&#8230;</string>
     <string name="done">Done</string>
     <string name="history">See History</string>
 
-    <string name="directionsHeader">Directions</string>
+    <string name="directionsHeader">Level Directions</string>
 
-    <string name="levelDirections">Hold your phone steady in your chosen hand and
-        keep the ball as close to the center of the ring of circles as possible.</string>
+    <string name="levelDirections">Hold this device in your %1$s hand with the screen flat and facing up.\n\n
+        After a 3 second countdown, move the ball to the center (shaded green). Then, hold the ball
+        steady in the center for 5 seconds.</string>
     <string name="pathOutput">Path</string>
     <string name="heatmapOutput">Heatmap</string>
     <string name="levelOutput">Show output</string>

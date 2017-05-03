@@ -3,6 +3,7 @@
     package="edu.umd.cmsc436.Level">
 
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -11,6 +12,7 @@
         android:theme="@style/AppTheme">
         <activity android:name="edu.umd.cmsc436.Level.LevelActivity"
             android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="edu.umd.cmsc436.level.action.TRIAL" />

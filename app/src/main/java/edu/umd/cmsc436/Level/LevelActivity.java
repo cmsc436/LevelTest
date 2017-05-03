@@ -1,5 +1,6 @@
 package edu.umd.cmsc436.Level;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,6 +11,7 @@ import android.hardware.SensorManager;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -59,10 +61,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private Sheets.TestType trialModeAppendage = null;
     private Integer trialModeDifficulty = null;
 
-    RadioButton diffOne;
-    RadioButton diffTwo;
-    RadioButton diffThree;
-
     //used for visually defining the center
     Canvas canvas;
 
@@ -93,9 +91,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         textCountdown = (TextView) findViewById(R.id.levelTestTextCountdown);
         heatmapRadioButton = (RadioButton) findViewById(R.id.heatmapRadioButton);
-        diffOne = (RadioButton) findViewById(R.id.diffOne);
-        diffTwo = (RadioButton) findViewById(R.id.diffTwo);
-        diffThree = (RadioButton) findViewById(R.id.diffThree);
 
         // Sheets stuff
         sheet = new Sheets(this, this, getString(R.string.app_name), spreadsheetId, privateSpreadsheetId);
@@ -119,8 +114,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // used to avoid unregistering the listener twice (if the test ends while the app is paused)
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
-        actionType = 2;
-        boolean startedTest = false;
 
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
@@ -131,13 +124,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
-                    startedTest = true;
-                    startlevelTest(textCountdown);
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
-                    startedTest = true;
-                    startlevelTest(textCountdown);
                     break;
                 case "edu.umd.cmsc436.level.action.HELP":
                     actionType = 1;
@@ -148,10 +137,10 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             }
         }
 
-        if(!startedTest && actionType == 2){
-            startlevelTest(textCountdown);
-        }
+        setOutputListener();
+    }
 
+    private void setOutputListener() {
         findViewById(R.id.levelOutputButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -172,20 +161,39 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         });
     }
 
+    private String getHand(Sheets.TestType testType) {
+        if (testType == Sheets.TestType.LH_LEVEL) {
+            return "left";
+        }else{
+            return "right";
+        }
+    }
+
+    public void showInstructions(View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(LevelActivity.this);
+        builder.setTitle(R.string.directionsHeader);
+        builder.setMessage(String.format(getResources().getString(R.string.levelDirections),
+                getHand(trialModeAppendage)));
+
+        builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // if this button is clicked, close current activity
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+        TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
+        textView.setTextSize(30);
+    }
+
     private void setDifficulty() {
         if (actionType == 3) {
-            // This is a trial
             // Use the difficulty received from the frontend's intent
             ballView.setDifficulty(trialModeDifficulty);
         }
         else {
-            // Not a trial, use the checked difficulty if present
-            if (diffOne.isChecked())
-                difficulty = 1;
-            else if (diffTwo.isChecked())
-                difficulty = 2;
-            else if (diffThree.isChecked())
-                difficulty = 3;
+            // Not a trial, use default difficulty
+            difficulty = 1;
             ballView.setDifficulty(difficulty);
         }
     }
@@ -193,12 +201,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     /* Starts a countdown and, when that's done, starts the level test. */
     public void startlevelTest(View view) {
         ballView.setVisibility(View.GONE); // just to be safe
-        diffOne.setVisibility(View.GONE);
-        diffTwo.setVisibility(View.GONE);
-        diffThree.setVisibility(View.GONE);
-        findViewById(R.id.levelTestDirectionsHeader).setVisibility(View.GONE);
-        findViewById(R.id.directions).setVisibility(View.GONE);
         findViewById(R.id.startlevelTestButton).setVisibility(View.GONE);
+        findViewById(R.id.helpButton).setVisibility(View.GONE);
         timeHandler = new Handler();
         timerCount = 3;
 
@@ -288,7 +292,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                //if(actionType == 3) { //comment this out to test sheets stuff
+                                if(actionType == 3 || testing) {
                                 pathLength = (float) ballView.getTotalPathLength();
                                     metric = pathLength +
                                             timeSpentInCircle +
@@ -300,9 +304,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                     setResult(RESULT_OK, intent);
 
                                     sendToSheets();
-                                //} else {
-                                //    restartTest();
-                                //}
+                                } else {
+                                    finish();
+                                }
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -395,6 +399,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
         sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), ballView.pathBitmap);
+        //sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), ballView.heatmapBitmap);
     }
 
     @Override
@@ -421,10 +426,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             throw new RuntimeException(e);
         }
 
-        if (!sentHeatmap) {
-            sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), ballView.heatmapBitmap);
-            sentHeatmap = true;
-        }
         Log.i(getClass().getSimpleName(), "Done");
     }
 

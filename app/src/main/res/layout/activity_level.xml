@@ -6,66 +6,26 @@
     android:layout_height="match_parent"
     tools:context="edu.umd.cmsc436.Level.LevelActivity">
 
-    <TextView android:id="@+id/levelTestDirectionsHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/directionsHeader"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="15dp"
-        android:textSize="35sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"/>
-
-    <TextView android:id="@+id/directions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_below="@+id/levelTestDirectionsHeader"
-        android:text="@string/levelDirections"
-        android:textSize="25sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="10dp"/>
-
-    <RadioGroup android:id="@+id/diffGroup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:padding="15dp"
-        android:layout_below="@id/directions">
-
-        <RadioButton android:id="@+id/diffOne"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:checked="true"
-            android:text="Difficulty 1"/>
-
-        <RadioButton android:id="@+id/diffTwo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:text="Difficulty 2"/>
-
-        <RadioButton android:id="@+id/diffThree"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:text="Difficulty 3"/>
-    </RadioGroup>
-
     <Button android:id="@+id/startlevelTestButton"
         android:text="@string/startTest"
         android:textSize="30sp"
         android:padding="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/diffGroup"
+        android:textColor="@android:color/white"
+        android:background="@color/colorAccent436"
+        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:onClick="startlevelTest" />
+
+    <Button android:id="@+id/helpButton"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="10dp"
+        android:background="@drawable/question_mark"
+        android:onClick="showInstructions"/>
 
     <TextView android:id="@+id/levelTestTextCountdown"
         android:layout_width="wrap_content"
