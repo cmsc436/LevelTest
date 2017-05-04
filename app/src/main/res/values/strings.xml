@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LevelTest</string>
+    <string name="app_name">Level Test</string>
 
     <string name="startTest">Start</string>
     <string name="timeLeft">Time Left: </string>

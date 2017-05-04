@@ -299,14 +299,14 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                             trialDuration;
 
                                     //sends intent back to front end
-                                    Intent intent = getIntent();
+                                    Intent intent = new Intent();
                                     intent.putExtra("score", metric);
                                     setResult(RESULT_OK, intent);
 
                                     sendToSheets();
                                 }
 
-                                finish();
+//                                finish();
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -387,6 +387,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
          finish();
      }
 
+    // Sends raw data + images to local sheets/drive
     private void sendToSheets() {
         float[] trial = {timeSpentInCircle, pathLength, trialDuration, metric};
         date = new Date();
@@ -397,6 +398,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             trialModePatientID = "test";
         }
 
+        // TODO send heatmap image when drive errors stop being a thing
         sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
         sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), ballView.pathBitmap);
         //sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), ballView.heatmapBitmap);
@@ -427,6 +429,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }
 
         Log.i(getClass().getSimpleName(), "Done");
+        finish();
     }
 
     @Override
