@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Level Test</string>
+    <string name="app_name_for_sheets">LevelTest</string>
 
     <string name="startTest">Start</string>
     <string name="timeLeft">Time Left: </string>
@@ -24,5 +25,7 @@
     <string name="hand">Hand:&#160;</string>
     <string name="difficultyLevel">Difficulty level:&#160;</string>
     <string name="imageFolder">0BymPSywiUM4aVGw5YlQ3ZTlhYVE</string>
+    <string name="centralSheetID">1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU</string>
+    <string name="privateSheetID">1Do1_GR62ZCAn_qhXXVVafG9_3_3Q0c6yXPyQV07nWZQ</string>
 
 </resources>

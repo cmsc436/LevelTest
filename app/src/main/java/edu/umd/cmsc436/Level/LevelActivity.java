@@ -71,8 +71,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     float metric;
     float timeSpentInCircle = 0;
 
-    private static final String spreadsheetId = "1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU";
-    private static final String privateSpreadsheetId = "1Do1_GR62ZCAn_qhXXVVafG9_3_3Q0c6yXPyQV07nWZQ";
     private Sheets sheet;
     public static final int LIB_ACCOUNT_NAME_REQUEST_CODE = 1001;
     public static final int LIB_AUTHORIZATION_REQUEST_CODE = 1002;
@@ -94,7 +92,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         heatmapRadioButton = (RadioButton) findViewById(R.id.heatmapRadioButton);
 
         // Sheets stuff
-        sheet = new Sheets(this, this, getString(R.string.app_name), spreadsheetId, privateSpreadsheetId);
+        sheet = new Sheets(this, this, getString(R.string.app_name_for_sheets),
+            getString(R.string.centralSheetID), getString(R.string.privateSheetID));
 
         // instance of "this" used for changing registration of this activity as a
         // SensorEventListener from within Runnables
@@ -422,8 +421,10 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }
 
         // TODO send heatmap image when drive errors stop being a thing
-        sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-        sheet.uploadToDrive(getString(R.string.imageFolder), path, ballView.pathBitmap);
+        //sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
+        setResult(RESULT_OK, TrialMode.getResultIntent(metric));
+        finish();
+        //sheet.uploadToDrive(getString(R.string.imageFolder), path, ballView.pathBitmap);
         //sheet.uploadToDrive(getString(R.string.imageFolder), heatmap, ballView.heatmapBitmap);
     }
 
@@ -454,9 +455,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         Log.i(getClass().getSimpleName(), "Done");
         // Send intent with our overall "metric" score back to the front end
-        Intent intent = new Intent();
-        intent.putExtra("score", metric);
-        setResult(RESULT_OK, intent);
+        setResult(RESULT_OK, TrialMode.getResultIntent(metric));
         finish();
     }
 
