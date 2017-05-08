@@ -308,6 +308,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                     //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
                                     sendToSheets();
                                 }
+                                else if (actionType != 3) {
+                                    finish();
+                                }
 
                                 //finish();
                             }
