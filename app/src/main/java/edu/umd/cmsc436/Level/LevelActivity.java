@@ -163,9 +163,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     private String getHand(Sheets.TestType testType) {
         if (testType == Sheets.TestType.LH_LEVEL) {
-            return "left";
+            return "left hand";
         }else{
-            return "right";
+            return "right hand";
         }
     }
 
@@ -303,10 +303,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                     intent.putExtra("score", metric);
                                     setResult(RESULT_OK, intent);
 
+                                    //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
                                     sendToSheets();
                                 }
 
-//                                finish();
+                                //finish();
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -391,7 +392,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private void sendToSheets() {
         float[] trial = {timeSpentInCircle, pathLength, trialDuration, metric};
         date = new Date();
-        sentHeatmap = false;
+        String path = date.toString() + ": Path, " + getHand(trialModeAppendage);
+        String heatmap = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
 
         if (testing) {
             trialModeAppendage = Sheets.TestType.LH_LEVEL;
@@ -400,8 +402,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         // TODO send heatmap image when drive errors stop being a thing
         sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-        sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": path"), ballView.pathBitmap);
-        //sheet.uploadToDrive(getString(R.string.imageFolder), (date.toString() + ": heatmap"), ballView.heatmapBitmap);
+        sheet.uploadToDrive(getString(R.string.imageFolder), path, ballView.pathBitmap);
+        //sheet.uploadToDrive(getString(R.string.imageFolder), heatmap, ballView.heatmapBitmap);
     }
 
     @Override

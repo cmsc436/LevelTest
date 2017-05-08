@@ -9,7 +9,7 @@
 
     <string name="directionsHeader">Level Directions</string>
 
-    <string name="levelDirections">Hold this device in your %1$s hand with the screen flat and facing up.\n\n
+    <string name="levelDirections">Hold this device in your %1$s with the screen flat and facing up.\n\n
         After a 3 second countdown, move the ball to the center (shaded green). Then, hold the ball
         steady in the center for 5 seconds.</string>
     <string name="pathOutput">Path</string>
