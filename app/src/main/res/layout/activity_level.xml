@@ -27,7 +27,7 @@
         android:textStyle="bold"
         android:textColor="@color/black"
         android:text="Hand: "
-        android:layout_below="@+id/startlevelTestButton"
+        android:layout_below="@+id/currentLevel"
         />
 
     <TextView android:id="@+id/currentLevel"
@@ -38,7 +38,7 @@
         android:textStyle="bold"
         android:textColor="@color/black"
         android:text="Level: "
-        android:layout_below="@+id/currentHand"
+        android:layout_below="@+id/startlevelTestButton"
         />
 
     <Button android:id="@+id/helpButton"

@@ -142,6 +142,10 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     break;
             }
         }
+        if(actionType != 3){
+            hand.setVisibility(View.GONE);
+            levelView.append(String.valueOf(1));
+        }
 
         setOutputListener();
     }
