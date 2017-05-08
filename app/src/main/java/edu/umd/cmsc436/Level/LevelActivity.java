@@ -140,6 +140,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 case "edu.umd.cmsc436.level.action.HISTORY":
                     actionType = 0;
                     break;
+                default:
+                    actionType = -1;
             }
         }
         if(actionType != 3){
@@ -322,7 +324,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                     //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
                                     sendToSheets();
                                 }
-                                else if (actionType != 3) {
+                                else {
                                     finish();
                                 }
 
