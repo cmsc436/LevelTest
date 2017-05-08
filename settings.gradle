@@ -1,1 +1,1 @@
-include ':app', ':sheets436-0.0.6-release'
+include ':app', ':sheets436-0.0.6-release', ':frontendhelper-v0.3'

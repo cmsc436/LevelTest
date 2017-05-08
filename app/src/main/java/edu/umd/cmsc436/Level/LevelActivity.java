@@ -320,10 +320,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                             averageDisplacement +
                                             trialDuration;
                                 averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
-                                    //sends intent back to front end
-                                    Intent intent = new Intent();
-                                    intent.putExtra("score", metric);
-                                    setResult(RESULT_OK, intent);
 
                                     //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
                                     sendToSheets();
@@ -449,6 +445,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }
     }
 
+    // Called when sending local stuff to sheets is done.
     @Override
     public void notifyFinished(Exception e) {
         if (e != null) {
@@ -456,6 +453,10 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }
 
         Log.i(getClass().getSimpleName(), "Done");
+        // Send intent with our overall "metric" score back to the front end
+        Intent intent = new Intent();
+        intent.putExtra("score", metric);
+        setResult(RESULT_OK, intent);
         finish();
     }
 

@@ -41,4 +41,5 @@ dependencies {
         exclude group: 'com.google.code.findbugs'
     }
     compile project(':sheets436-0.0.6-release')
+    compile project(':frontendhelper-v0.3')
 }
