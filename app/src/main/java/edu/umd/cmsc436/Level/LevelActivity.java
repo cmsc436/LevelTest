@@ -128,8 +128,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                     hand.append(getHand(trialModeAppendage));
-                    levelView.append(String.valueOf(difficulty));
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
+                    levelView.append(String.valueOf(trialModeDifficulty));
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
@@ -174,10 +174,14 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     }
 
     private String getHand(Sheets.TestType testType) {
-        if (testType == Sheets.TestType.LH_LEVEL) {
-            return "left hand";
-        }else{
-            return "right hand";
+        if (actionType == 3) {
+            if (testType == Sheets.TestType.LH_LEVEL) {
+                return getString(R.string.leftHand);
+            } else {
+                return getString(R.string.rightHand);
+            }
+        } else {
+            return getString(R.string.unspecifiedHand);
         }
 
 
