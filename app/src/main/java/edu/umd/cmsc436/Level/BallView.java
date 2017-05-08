@@ -244,8 +244,8 @@ public class BallView extends View{
         storePath();
         oldPositions.addAll(ballPositions);
         ballPositions.clear();
-        ballPositionMeasurementRunningMean = 0;
-        ballPositionMeasurementCount = 0;
+        //ballPositionMeasurementRunningMean = 0;
+        //ballPositionMeasurementCount = 0;
     }
 
     /* Records the ball's position. Should be called at a regular interval so as to ensure a
@@ -500,8 +500,8 @@ public class BallView extends View{
                 storePath();
                 oldPositions.addAll(ballPositions);
                 ballPositions.clear();
-                ballPositionMeasurementRunningMean = 0;
-                ballPositionMeasurementCount = 0;
+                //ballPositionMeasurementRunningMean = 0;
+                //ballPositionMeasurementCount = 0;
                 countdownNotHappening = false;
             }
             else if (!countdownNotHappening && ballDistanceFromCenter >= (CIRCLE_RADIUS_DISTANCE*center)) {
