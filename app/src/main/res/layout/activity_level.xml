@@ -18,6 +18,29 @@
         android:layout_centerHorizontal="true"
         android:onClick="startlevelTest" />
 
+    <TextView android:id="@+id/currentHand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textSize="30sp"
+        android:paddingTop="20dp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:text="Hand: "
+        android:layout_below="@+id/startlevelTestButton"
+        />
+
+    <TextView android:id="@+id/currentLevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:text="Level: "
+        android:layout_below="@+id/currentHand"
+        />
+
     <Button android:id="@+id/helpButton"
         android:layout_width="60dp"
         android:layout_height="60dp"

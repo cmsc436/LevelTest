@@ -116,6 +116,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
 
+        TextView hand = (TextView)findViewById(R.id.currentHand);
+        TextView levelView = (TextView)findViewById(R.id.currentLevel);
+
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
         if (action != null){
@@ -124,6 +127,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     actionType = 3;
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
+                    hand.append(getHand(trialModeAppendage));
+                    levelView.append(String.valueOf(difficulty));
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
@@ -168,6 +173,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }else{
             return "right hand";
         }
+
+
+
     }
 
     public void showInstructions(View view) {
@@ -204,6 +212,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         ballView.setVisibility(View.GONE); // just to be safe
         findViewById(R.id.startlevelTestButton).setVisibility(View.GONE);
         findViewById(R.id.helpButton).setVisibility(View.GONE);
+        findViewById(R.id.currentHand).setVisibility(View.GONE);
+        findViewById(R.id.currentLevel).setVisibility(View.GONE);
         timeHandler = new Handler();
         timerCount = 3;
 
