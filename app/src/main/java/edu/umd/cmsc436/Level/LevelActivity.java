@@ -67,6 +67,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     //metric variables
     float pathLength;
     float trialDuration;
+    float averageDisplacement;
     float metric;
     float timeSpentInCircle = 0;
 
@@ -296,8 +297,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                 pathLength = (float) ballView.getTotalPathLength();
                                     metric = pathLength +
                                             timeSpentInCircle +
+                                            averageDisplacement +
                                             trialDuration;
-
+                                averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
                                     //sends intent back to front end
                                     Intent intent = new Intent();
                                     intent.putExtra("score", metric);
@@ -389,7 +391,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     // Sends raw data + images to local sheets/drive
     private void sendToSheets() {
-        float[] trial = {timeSpentInCircle, pathLength, trialDuration, metric};
+        float[] trial = {timeSpentInCircle, pathLength, averageDisplacement, trialDuration, metric};
         date = new Date();
         sentHeatmap = false;
 
