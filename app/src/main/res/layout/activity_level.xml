@@ -64,22 +64,23 @@
         android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
         android:textSize="30sp"
-        android:paddingTop="20dp"
+        android:paddingTop="10dp"
         android:textColor="@color/black"
         android:text="@string/handPrefix"
         android:layout_below="@+id/currentLevel"
         android:visibility="gone"
         />
 
-    <TextView android:id="@+id/currentLevel"
+    <TextView android:id="@+id/trialNumberInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
         android:textSize="30sp"
-        android:paddingTop="20dp"
+        android:paddingTop="10dp"
         android:textColor="@color/black"
-        android:text="@string/difficultyLevel"
-        android:layout_below="@+id/startlevelTestButton"
+        android:text="@string/trialPrefix"
+        android:layout_below="@+id/currentHand"
         android:visibility="gone"
         />
 
@@ -165,6 +166,14 @@
         android:text="@string/done"
         android:textSize="20sp"
         android:padding="20dp"
+        android:visibility="gone" />
+
+    <ProgressBar android:id="@+id/dataSendingProgressBar"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/done_button"
+        android:indeterminate="true"
         android:visibility="gone" />
 
 </RelativeLayout>

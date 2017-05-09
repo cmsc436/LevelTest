@@ -24,7 +24,6 @@ import edu.umd.cmsc436.sheets.Sheets;
 import edu.umd.cmsc436.frontendhelper.TrialMode;
 
 import android.graphics.Canvas;
-import android.widget.Toast;
 
 import java.util.Date;
 import java.util.Locale;
@@ -54,6 +53,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private String trialModePatientID = null;
     private Sheets.TestType trialModeAppendage = null;
     private Integer trialModeDifficulty = null;
+    private Integer trialNum = null;
+    private Integer trialOutOf = null;
 
     //metric variables
     float pathLength;
@@ -70,7 +71,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     Date date;
 
     //boolean for testing if statements
-    boolean testing = true;
+    boolean testing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +107,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         TextView hand = (TextView)findViewById(R.id.currentHand);
         TextView levelView = (TextView)findViewById(R.id.currentLevel);
+        TextView trialNumInfo = (TextView) findViewById(R.id.trialNumberInfo);
 
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
@@ -115,6 +117,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     actionType = 3;
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
 
+                    // Set hand textview in a compatible-with-translation way
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                     String handText = hand.getText().toString() + getString(R.string.your);
                     int handStartPos = handText.length() - 1;
@@ -125,9 +128,18 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     hand.setText(ssb);
                     hand.setVisibility(View.VISIBLE);
 
+                    // Set difficulty variable and textview
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
                     levelView.append(String.valueOf(trialModeDifficulty));
                     levelView.setVisibility(View.VISIBLE);
+
+                    // Set trial count textview
+                    trialNum = TrialMode.getTrialNum(incomingIntent);
+                    trialOutOf = TrialMode.getTrialOutOf(incomingIntent);
+                    String trialNumInfoStr = trialNumInfo.getText().toString();
+                    trialNumInfoStr += Integer.toString(trialNum) + getString(R.string.of);
+                    trialNumInfoStr += Integer.toString(trialOutOf) + getString(R.string.forthishand);
+                    trialNumInfo.setText(trialNumInfoStr);
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
@@ -146,6 +158,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 default:
                     actionType = -1;
             }
+        }
+        if(actionType != 3){
+            trialNumInfo.setVisibility(View.GONE);
         }
 
         setOutputListener();
@@ -238,6 +253,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         findViewById(R.id.currentLevel).setVisibility(View.GONE);
         findViewById(R.id.diffGroup).setVisibility(View.GONE);
         findViewById(R.id.diffHeader).setVisibility(View.GONE);
+        findViewById(R.id.trialNumberInfo).setVisibility(View.GONE);
         timeHandler = new Handler();
         timerCount = 3;
 
