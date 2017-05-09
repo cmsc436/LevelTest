@@ -453,6 +453,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         switch(dataChunksSent) {
             case 0:
+                findViewById(R.id.dataSendingProgressBar).setVisibility(View.VISIBLE);
                 Log.i(getClass().getSimpleName(), "Writing trial data");
                 // write trial data
                 float[] trial = {timeSpentInCenter, pathLength, averageDisplacement, metric};
