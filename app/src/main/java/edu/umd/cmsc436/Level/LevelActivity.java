@@ -143,6 +143,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
+
                     //show difficulty menu
                     findViewById(R.id.diffGroup).setVisibility(View.VISIBLE);
                     findViewById(R.id.diffHeader).setVisibility(View.VISIBLE);
