@@ -292,7 +292,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             timeToMoveToCenter = 0.001 * (System.currentTimeMillis() - testStartTime);
         }
         secondsLeft = 0;
-        countDownTimer = new CountDownTimer(5500, 100) {
+        countDownTimer = new CountDownTimer(10500, 100) {
 
             public void onTick(long millisUntilFinished) {
                 // Update "Time Left" field
@@ -439,7 +439,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             case 0:
                 Log.i(getClass().getSimpleName(), "Writing trial data");
                 // write trial data
-                float[] trial = {timeSpentInCircle, pathLength, averageDisplacement, trialDuration, metric};
+                float[] trial = {timeSpentInCenter, pathLength, averageDisplacement, metric};
                 date = new Date();
                 sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
                 break;

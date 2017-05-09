@@ -92,6 +92,8 @@ public class BallView extends View{
     // An array used to track the time the ball spends in each circle.
     private long[] timeSpentInCircles;
 
+    private boolean countdownStarted = false;
+
     private int currCircle = -5, prevCircle = -5;
 
     long startTime, endTime, elapsedTime;
@@ -470,6 +472,11 @@ public class BallView extends View{
         super.onDraw(canvas);
         exportCanvas = canvas;
 
+        if(countdownStarted == false) {
+            LevelActivity.startCountdownTimer();
+            countdownStarted = true;
+        }
+
         int radius = 0;
         boolean coloringNotDone = true;
         boolean coloringJustDone = false;
@@ -511,10 +518,6 @@ public class BallView extends View{
                 }
                 timeInCenter+= (System.currentTimeMillis() - lastTimeStamp);
             }
-            //else if (!countdownNotHappening && ballDistanceFromCenter >= (CIRCLE_RADIUS_DISTANCE*center)) {
-                //LevelActivity.stopCountdownTimer();
-                //resetCountdown();
-            //}
 
             /* We just sample every time we redraw the ball. This is generally reasonable -- "quantity"
              * of position data is really just a means to an end to plot the ball's position, so the
