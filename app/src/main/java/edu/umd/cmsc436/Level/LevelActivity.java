@@ -19,6 +19,7 @@ import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -130,11 +131,12 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     actionType = 3;
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
-                    String handText = hand.getText().toString();
-                    handText += getString(R.string.your) + getHand(trialModeAppendage) + getString(R.string.period);
+                    String handText = hand.getText().toString() + getString(R.string.your);
+                    int handStartPos = handText.length() - 1;
+                    handText += getHand(trialModeAppendage) + getString(R.string.period);
                     SpannableStringBuilder ssb = new SpannableStringBuilder(handText);
                     ssb.setSpan(new android.text.style.StyleSpan(Typeface.BOLD),
-                        40, handText.length() - 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+                        handStartPos, handText.length() - 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                     hand.setText(ssb);
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
                     levelView.append(String.valueOf(trialModeDifficulty));
@@ -210,7 +212,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
         TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
-        textView.setTextSize(30);
+        textView.setTextSize(20);
+        textView.setGravity(Gravity.CENTER);
     }
 
     private void setDifficulty() {

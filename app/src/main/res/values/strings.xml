@@ -8,10 +8,10 @@
     <string name="done">Done</string>
     <string name="history">See History</string>
 
-    <string name="directionsHeader">Level Directions</string>
+    <string name="directionsHeader">Level Test Directions</string>
 
     <string name="levelDirections">Hold this device in your %1$s with the screen flat and facing up.\n\nAfter
-        a 3 second countdown, move the ball to the center (shaded green). Then, hold the ball
+        a 3 second countdown, move the ball to the center of the screen (which will be shaded green). Then hold the ball
         steady in the center for 5 seconds.</string>
     <string name="pathOutput">Path</string>
     <string name="heatmapOutput">Heatmap</string>
