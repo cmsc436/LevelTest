@@ -329,7 +329,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                             public void onClick(View v) {
                                 if (!doneButtonPressed) {
                                     doneButtonPressed = true;
-                                    Log.i("adsf", "in onclick of done");
+//                                    Log.i("asdf", "in onclick of done");
                                     if (actionType == 3 || testing) {
                                         pathLength = (float) ballView.getTotalPathLength();
                                         averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
@@ -431,12 +431,16 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             trialModePatientID = "test";
         }
 
-        // TODO send heatmap image when drive errors stop being a thing
-        //sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-        setResult(RESULT_OK, TrialMode.getResultIntent(metric));
-        finish();
-        //sheet.uploadToDrive(getString(R.string.imageFolder), path, ballView.pathBitmap);
+        // Send raw data to local sheets
+        sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
+        // Send images of the path and heatmap, respectively
+        // TODO: There's a bug in the drive functionality somewhere where the following two commands
+        // result in two images of the heatmap (with the same filename) being uploaded. Might be rectifiable
+        // by chaining another command from within notifyFinished() (race condition somewhere?)
+        sheet.uploadToDrive(getString(R.string.imageFolder), path, ballView.pathBitmap);
         //sheet.uploadToDrive(getString(R.string.imageFolder), heatmap, ballView.heatmapBitmap);
+        //setResult(RESULT_OK, TrialMode.getResultIntent(metric));
+        //finish();
     }
 
     @Override
