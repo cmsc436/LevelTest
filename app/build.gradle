@@ -40,6 +40,6 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'com.google.code.findbugs'
     }
-    compile project(':sheets436-0.0.6-release')
     compile project(':frontendhelper-v0.3')
+    compile project(':sheets436-0.0.7-release')
 }

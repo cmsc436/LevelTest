@@ -2,8 +2,6 @@ package edu.umd.cmsc436.Level;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -15,11 +13,8 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -31,12 +26,8 @@ import edu.umd.cmsc436.frontendhelper.TrialMode;
 import android.graphics.Canvas;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Date;
 import java.util.Locale;
-import java.util.logging.Level;
 
 /* NOTE that most of timeTask() and revealTask() were written by Ian for the Tapping Activity,
  * and have been repurposed here (don't give me any credit for those parts).
@@ -50,8 +41,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private int timerCount, secondsLeft;
     // The time at which the user starts moving the ball to the center circle.
     public long testStartTime;
-    // The time taken to move the ball to the center circle.
-    private double timeToMoveToCenter;
     private String timeLeft;
     private SensorEventListener thisThing;
     private SensorManager sensorManager;
@@ -66,9 +55,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private Sheets.TestType trialModeAppendage = null;
     private Integer trialModeDifficulty = null;
 
-    //used for visually defining the center
-    Canvas canvas;
-
     //metric variables
     float pathLength;
     float averageDisplacement;
@@ -82,11 +68,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     public static final int LIB_PLAY_SERVICES_REQUEST_CODE = 1004;
     public static final int LIB_CONNECTION_REQUEST_CODE = 1005;
     Date date;
-    Boolean sentHeatmap;
-    private int dataChunksSent;
 
     //boolean for testing if statements
-    boolean testing = false;
+    boolean testing = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +92,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         // We make the assumption that a user who has navigated to this activity
-        // has a device that supports an accelerometer. (See the MainActivity for reference.)
+        // has a device that supports an accelerometer.
         ballView = (BallView) findViewById(R.id.ballViewContainer);
         ballView.setParentActivity(this);
         // boolean that records whether or not the user is in the middle of the actual test
@@ -120,13 +104,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
 
-        // Data sent to local sheets/folder.
-        // ranges from 0 to 3:
-        // 1st piece of data is writing to local sheets
-        // 2nd piece of data is uploading path image to folder
-        // 3rd piece of data is uploading heatmap image to folder
-        dataChunksSent = 0;
-
         TextView hand = (TextView)findViewById(R.id.currentHand);
         TextView levelView = (TextView)findViewById(R.id.currentLevel);
 
@@ -137,6 +114,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 case "edu.umd.cmsc436.level.action.TRIAL":
                     actionType = 3;
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
+
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                     String handText = hand.getText().toString() + getString(R.string.your);
                     int handStartPos = handText.length() - 1;
@@ -145,14 +123,22 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     ssb.setSpan(new android.text.style.StyleSpan(Typeface.BOLD),
                         handStartPos, handText.length() - 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                     hand.setText(ssb);
+                    hand.setVisibility(View.VISIBLE);
+
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
                     levelView.append(String.valueOf(trialModeDifficulty));
+                    levelView.setVisibility(View.VISIBLE);
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
+                    //show difficulty menu
+                    findViewById(R.id.diffGroup).setVisibility(View.VISIBLE);
+                    findViewById(R.id.diffHeader).setVisibility(View.VISIBLE);
                     break;
                 case "edu.umd.cmsc436.level.action.HELP":
                     actionType = 1;
+                    showInstructions();
+                    finish();
                     break;
                 case "edu.umd.cmsc436.level.action.HISTORY":
                     actionType = 0;
@@ -161,12 +147,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     actionType = -1;
             }
         }
-        if(actionType != 3){
-            hand.setVisibility(View.GONE);
-            levelView.append(String.valueOf(1));
-        }
 
         setOutputListener();
+        setHelpListener();
     }
 
     private void setOutputListener() {
@@ -202,7 +185,16 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }
     }
 
-    public void showInstructions(View view) {
+    private void setHelpListener() {
+        findViewById(R.id.helpButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showInstructions();
+            }
+        });
+    }
+
+    public void showInstructions() {
         AlertDialog.Builder builder = new AlertDialog.Builder(LevelActivity.this);
         builder.setTitle(R.string.directionsHeader);
         builder.setMessage(String.format(getResources().getString(R.string.levelDirections),
@@ -218,16 +210,20 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         alertDialog.show();
         TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
         textView.setTextSize(25);
-        //textView.setGravity(Gravity.CENTER);
     }
 
     private void setDifficulty() {
         if (actionType == 3) {
             // Use the difficulty received from the frontend's intent
             ballView.setDifficulty(trialModeDifficulty);
-        }
-        else {
-            // Not a trial, use default difficulty
+
+        } else if (((RadioButton)findViewById(R.id.diffThree)).isChecked()) {
+            difficulty = 3;
+            ballView.setDifficulty(difficulty);
+        } else if (((RadioButton)findViewById(R.id.diffTwo)).isChecked()) {
+            difficulty = 2;
+            ballView.setDifficulty(difficulty);
+        }else{
             difficulty = 1;
             ballView.setDifficulty(difficulty);
         }
@@ -240,6 +236,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         findViewById(R.id.helpButton).setVisibility(View.GONE);
         findViewById(R.id.currentHand).setVisibility(View.GONE);
         findViewById(R.id.currentLevel).setVisibility(View.GONE);
+        findViewById(R.id.diffGroup).setVisibility(View.GONE);
+        findViewById(R.id.diffHeader).setVisibility(View.GONE);
         timeHandler = new Handler();
         timerCount = 3;
 
@@ -289,9 +287,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     }
 
     public void startCountdownTimer() {
-        if (!countdownStopped) {
-            timeToMoveToCenter = 0.001 * (System.currentTimeMillis() - testStartTime);
-        }
         secondsLeft = 0;
         countDownTimer = new CountDownTimer(10500, 100) {
 
@@ -356,12 +351,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                                         timeSpentInCenter +
                                         averageDisplacement;
 
-                                //sends intent back to front end
-                                Intent intent = new Intent();
-                                intent.putExtra("score", metric);
-                                setResult(RESULT_OK, intent);
-
-                                //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
+                                setResult(RESULT_OK, TrialMode.getResultIntent(metric));
                                 sendToSheets();
                             } else {
                                 finish();
@@ -442,34 +432,15 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             trialModePatientID = "test";
         }
 
-        switch(dataChunksSent) {
-            case 0:
-                Log.i(getClass().getSimpleName(), "Writing trial data");
-                // write trial data
-                float[] trial = {timeSpentInCenter, pathLength, averageDisplacement, metric};
-                date = new Date();
-                sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-                break;
-            case 1:
-                Log.i(getClass().getSimpleName(), "Uploading path file");
-                // upload path bitmap
-                String pathFilename = date.toString() + ": Path, " + getHand(trialModeAppendage);
-                sheet.uploadToDrive(getString(R.string.imageFolder), pathFilename, ballView.pathBitmap);
-                break;
-            case 2:
-                Log.i(getClass().getSimpleName(), "Uploading heatmap file");
-                // upload heatmap bitmap
-                String heatmapFilename = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
-                sheet.uploadToDrive(getString(R.string.imageFolder), heatmapFilename, ballView.heatmapBitmap);
-                break;
-            default:
-                // Done sending data using our instance of the Sheets class
-                Log.i(getClass().getSimpleName(), "Done");
-                // Send intent with our overall "metric" score back to the front end
-                setResult(RESULT_OK, TrialMode.getResultIntent(metric));
-                finish();
-        }
+        float[] trial = {timeSpentInCenter, pathLength, averageDisplacement, metric};
+        date = new Date();
+        sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
 
+        String pathFilename = date.toString() + ": Path, " + getHand(trialModeAppendage);
+        sheet.uploadToDrive(getString(R.string.imageFolder), pathFilename, ballView.pathBitmap);
+
+        String heatmapFilename = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
+        sheet.uploadToDrive(getString(R.string.imageFolder), heatmapFilename, ballView.heatmapBitmap);
     }
 
     @Override
@@ -497,11 +468,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         if (e != null) {
             throw new RuntimeException(e);
         }
-        dataChunksSent++;
 
-        // Attempt to send more data -- if no data is left to be sent, then the activity will be
-        // gracefully finish()ed
-        sendToSheets();
+        finish();
     }
 
     @Override

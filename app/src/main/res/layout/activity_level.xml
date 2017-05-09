@@ -18,6 +18,46 @@
         android:layout_centerHorizontal="true"
         android:onClick="startlevelTest" />
 
+    <RadioGroup android:id="@+id/diffGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/startlevelTestButton"
+        android:visibility="gone"
+        android:paddingTop="30dp">
+
+        <RadioButton android:id="@+id/diffOne"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="25dp"
+            android:checked="true"
+            android:text="Difficulty 1"/>
+
+        <RadioButton android:id="@+id/diffTwo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="25dp"
+            android:text="Difficulty 2"/>
+
+        <RadioButton android:id="@+id/diffThree"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="25dp"
+            android:text="Difficulty 3"/>
+    </RadioGroup>
+
+    <TextView android:id="@+id/diffHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/startlevelTestButton"
+        android:paddingBottom="50dp"
+        android:visibility="gone"
+        android:text="@string/diffHeader"
+        android:textSize="30dp"
+        android:textColor="@color/black"/>
+
     <TextView android:id="@+id/currentHand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -28,6 +68,7 @@
         android:textColor="@color/black"
         android:text="@string/handPrefix"
         android:layout_below="@+id/currentLevel"
+        android:visibility="gone"
         />
 
     <TextView android:id="@+id/currentLevel"
@@ -39,6 +80,7 @@
         android:textColor="@color/black"
         android:text="@string/difficultyLevel"
         android:layout_below="@+id/startlevelTestButton"
+        android:visibility="gone"
         />
 
     <Button android:id="@+id/helpButton"
