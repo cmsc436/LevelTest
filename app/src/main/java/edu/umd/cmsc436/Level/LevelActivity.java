@@ -49,7 +49,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private TextView textCountdown, textTimer;
     private int timerCount, secondsLeft;
     // The time at which the user starts moving the ball to the center circle.
-    private long testStartTime;
+    public long testStartTime;
     // The time taken to move the ball to the center circle.
     private double timeToMoveToCenter;
     private String timeLeft;
@@ -192,11 +192,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     private String getHand(Sheets.TestType testType) {
         if (actionType == 3) {
-            if (testType == Sheets.TestType.LH_LEVEL) {
+            if (testType == Sheets.TestType.LH_LEVEL)
                 return getString(R.string.leftHand);
-            } else {
+            else
                 return getString(R.string.rightHand);
-            }
+
         } else {
             return getString(R.string.unspecifiedHand);
         }
@@ -213,11 +213,12 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 // if this button is clicked, close current activity
             }
         });
+
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
         TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
-        textView.setTextSize(20);
-        textView.setGravity(Gravity.CENTER);
+        textView.setTextSize(25);
+        //textView.setGravity(Gravity.CENTER);
     }
 
     private void setDifficulty() {
@@ -309,8 +310,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 String timeFinished = String.format(Locale.US, "%s %d", timeLeft, 0);
                 textTimer.setText(timeFinished);
 
-                timeSpentInCenter = System.currentTimeMillis() - ballView.lastTimeStamp;
-
                 if (activityHasFocus) {
                     // Used to reduce "jarring" effect of switching from level to results
                     try {
@@ -320,6 +319,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     }
                 }
                 textTimer.setVisibility(View.GONE);
+
                 // Enable output display controls
                 ballView.drawFinishedView();
                 findViewById(R.id.levelOutputRadioGroup).setVisibility(View.VISIBLE);
@@ -327,35 +327,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 // This flag variable is used to prevent double-clicking the done button (which
                 // could ostensibly cause some weird errors, like things being sent to sheets twice)
                 doneButtonPressed = false;
+
                 Button done_button = (Button)findViewById(R.id.done_button);
-//                Toast.makeText(LevelActivity.this, Double.valueOf(ballView.getAveragePathLengths()).toString(), Toast.LENGTH_SHORT).show();
-                done_button.setOnClickListener(
-                        new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if (!doneButtonPressed) {
-                                    doneButtonPressed = true;
-                                    if (actionType == 3 || testing) {
-                                        pathLength = (float) ballView.getTotalPathLength();
-                                        averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
-                                        metric = pathLength +
-                                                timeSpentInCenter +
-                                                averageDisplacement;
-
-                                        //sends intent back to front end
-                                        Intent intent = new Intent();
-                                        intent.putExtra("score", metric);
-                                        setResult(RESULT_OK, intent);
-
-                                        //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
-                                        sendToSheets();
-                                    } else {
-                                        finish();
-                                    }
-                                }
-                            }
-                        });
+                setDoneListener(done_button);
                 done_button.setVisibility(View.VISIBLE);
+
                 if (!listenerUnregisteredOnPause) {
                     sensorManager.unregisterListener(thisThing);
 //                    Log.i("hi", "Unregistered listener on test completion");
@@ -365,8 +341,34 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         countDownTimer.start();
     }
 
-    protected void restartTest(){
-        this.recreate();
+    private void setDoneListener(Button done_button) {
+        done_button.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (!doneButtonPressed) {
+                            doneButtonPressed = true;
+                            if (actionType == 3 || testing) {
+                                pathLength = (float) ballView.getTotalPathLength();
+                                timeSpentInCenter = (float) (ballView.timeInCenter / 1000.00);
+                                averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
+                                metric = pathLength +
+                                        timeSpentInCenter +
+                                        averageDisplacement;
+
+                                //sends intent back to front end
+                                Intent intent = new Intent();
+                                intent.putExtra("score", metric);
+                                setResult(RESULT_OK, intent);
+
+                                //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
+                                sendToSheets();
+                            } else {
+                                finish();
+                            }
+                        }
+                    }
+                });
     }
 
     @Override
@@ -435,6 +437,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     // Sends raw data + images to local sheets/drive
     private void sendToSheets() {
+        if (testing) {
+            trialModeAppendage = Sheets.TestType.LH_LEVEL;
+            trialModePatientID = "test";
+        }
+
         switch(dataChunksSent) {
             case 0:
                 Log.i(getClass().getSimpleName(), "Writing trial data");
@@ -491,6 +498,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             throw new RuntimeException(e);
         }
         dataChunksSent++;
+
         // Attempt to send more data -- if no data is left to be sent, then the activity will be
         // gracefully finish()ed
         sendToSheets();

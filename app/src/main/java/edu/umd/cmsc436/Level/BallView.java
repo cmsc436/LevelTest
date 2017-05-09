@@ -122,8 +122,8 @@ public class BallView extends View{
     private int center;
 
     //metric data for total time the ball was in the center
-    float timeInCenter;
-    float lastTimeStamp;
+    long timeInCenter;
+    long lastTimeStamp;
     private boolean firstTimeInCenter = true;
 
     // Instance of the LevelActivity in which this BallView is contained. Used here for
@@ -500,23 +500,16 @@ public class BallView extends View{
             ballDistanceFromCenter = Math.sqrt(
                     Math.pow(ballX - HALF_VIEW_WIDTH, 2) + Math.pow(ballY - HALF_VIEW_HEIGHT, 2)
             );
-            if (countdownNotHappening && ballDistanceFromCenter < (CIRCLE_RADIUS_DISTANCE*center)) {
-                /* This set of conditions is true when
-                 * 1) we haven't started the countdown timer yet (because when it starts, the
-                 *    LevelActivity calls BallView.setParentActivity(null);)
-                 * 2) The ball is in the center "circle," and we haven't started the countdown
-                 *    timer yet (so this is the first time we have observed the ball being in the center
-                 *    of the screen) */
-                storePath();
-                oldPositions.addAll(ballPositions);
-                ballPositions.clear();
 
-                countdownNotHappening = false;
+            if (ballDistanceFromCenter < (CIRCLE_RADIUS_DISTANCE*center)) {
+                //measure the time the ball spends in the center
                 if (firstTimeInCenter) {
                     lastTimeStamp = System.currentTimeMillis();
                     firstTimeInCenter = false;
+                }else {
+                    timeInCenter += System.currentTimeMillis() - lastTimeStamp;
+                    lastTimeStamp = System.currentTimeMillis();
                 }
-                timeInCenter+= (System.currentTimeMillis() - lastTimeStamp);
             }
 
             /* We just sample every time we redraw the ball. This is generally reasonable -- "quantity"
