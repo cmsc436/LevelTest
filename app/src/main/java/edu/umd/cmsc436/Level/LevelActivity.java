@@ -325,21 +325,14 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                             @Override
                             public void onClick(View v) {
                                 if(actionType == 3 || testing) {
-                                pathLength = (float) ballView.getTotalPathLength();
-                                    metric = pathLength +
-                                            timeSpentInCircle +
-                                            averageDisplacement +
-                                            trialDuration;
-                                averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
-
-                                    //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
+                                    pathLength = (float) ballView.getTotalPathLength();
+                                    averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
+                                    metric = pathLength + timeSpentInCircle + averageDisplacement + trialDuration;
                                     sendToSheets();
                                 }
                                 else {
                                     finish();
                                 }
-
-                                //finish();
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
