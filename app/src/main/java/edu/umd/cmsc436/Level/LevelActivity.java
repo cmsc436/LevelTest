@@ -45,8 +45,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private int timerCount, secondsLeft;
     // The time at which the user starts moving the ball to the center circle.
     public long testStartTime;
-    // The time taken to move the ball to the center circle.
-    private double timeToMoveToCenter;
     private String timeLeft;
     private SensorEventListener thisThing;
     private SensorManager sensorManager;
@@ -298,9 +296,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     }
 
     public void startCountdownTimer() {
-        if (!countdownStopped) {
-            timeToMoveToCenter = 0.001 * (System.currentTimeMillis() - testStartTime);
-        }
         secondsLeft = 0;
         countDownTimer = new CountDownTimer(10500, 100) {
 
