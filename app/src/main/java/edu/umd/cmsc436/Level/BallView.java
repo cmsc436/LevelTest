@@ -119,6 +119,11 @@ public class BallView extends View{
     private double ACCELERATION_MULTIPLIER;
     private int center;
 
+    //metric data for total time the ball was in the center
+    float timeInCenter;
+    float lastTimeStamp;
+    private boolean firstTimeInCenter = true;
+
     // Instance of the LevelActivity in which this BallView is contained. Used here for
     // triggering events within the LevelActivity (via LevelActivity.startCountdownTimer()
     // and LevelActivity.stopCountdownTimer()).
@@ -156,10 +161,10 @@ public class BallView extends View{
     public void setDifficulty(int difficulty) {
         if (difficulty == 1) {
             ACCELERATION_MULTIPLIER = 1;
-            center = 5;
+            center = 3;
         }else if (difficulty == 2) {
             ACCELERATION_MULTIPLIER = 4;
-            center = 3;
+            center = 2;
         }else if (difficulty == 3) {
             ACCELERATION_MULTIPLIER = 7;
             center = 1;
@@ -211,11 +216,10 @@ public class BallView extends View{
 
         totalNumCircles = (int) Math.ceil(MAX_VISIBLE_CIRCLE_RADIUS / CIRCLE_RADIUS_DISTANCE);
 
-        //initialize array, every circle time is set to zero
-        timeSpentInCircles = new long[totalNumCircles];
-        for (int i = 0; i < timeSpentInCircles.length; i++) {
-            timeSpentInCircles[i] = 0;
-        }
+        //variables to help calculate the time spent in the center
+        timeInCenter = 0;
+        firstTimeInCenter = true;
+        lastTimeStamp = 0;
 
         // ... information for drawing the ball
         WIDTH_BOUND = VIEW_WIDTH - BALL_SIZE;
@@ -496,18 +500,21 @@ public class BallView extends View{
                  * 2) The ball is in the center "circle," and we haven't started the countdown
                  *    timer yet (so this is the first time we have observed the ball being in the center
                  *    of the screen) */
-                LevelActivity.startCountdownTimer();
                 storePath();
                 oldPositions.addAll(ballPositions);
                 ballPositions.clear();
-                //ballPositionMeasurementRunningMean = 0;
-                //ballPositionMeasurementCount = 0;
+
                 countdownNotHappening = false;
+                if (firstTimeInCenter) {
+                    lastTimeStamp = System.currentTimeMillis();
+                    firstTimeInCenter = false;
+                }
+                timeInCenter+= (System.currentTimeMillis() - lastTimeStamp);
             }
-            else if (!countdownNotHappening && ballDistanceFromCenter >= (CIRCLE_RADIUS_DISTANCE*center)) {
-                LevelActivity.stopCountdownTimer();
-                resetCountdown();
-            }
+            //else if (!countdownNotHappening && ballDistanceFromCenter >= (CIRCLE_RADIUS_DISTANCE*center)) {
+                //LevelActivity.stopCountdownTimer();
+                //resetCountdown();
+            //}
 
             /* We just sample every time we redraw the ball. This is generally reasonable -- "quantity"
              * of position data is really just a means to an end to plot the ball's position, so the
@@ -539,35 +546,8 @@ public class BallView extends View{
                 coloringJustDone = true;
                 coloringNotDone = false;
                 int currBallCircle = (int) Math.floor(radius / CIRCLE_RADIUS_DISTANCE);
-
-                //Initialize starting time
-                if(prevCircle == -5) {
-                    prevCircle = currBallCircle;
-                    startTime = System.currentTimeMillis();
-                }
-                else if(prevCircle != currBallCircle) {
-                    endTime = System.currentTimeMillis();
-                    elapsedTime = endTime - startTime;
-                    timeSpentInCircles[prevCircle] += elapsedTime;
-
-                    //Start new counting down
-                    startTime = System.currentTimeMillis();
-                    prevCircle = currBallCircle;
-                }
-                /* The time spent in each circle is measured in milliseconds.
-                 * It measures the elapsed time between the start of onDraw and actually figuring
-                 * out what circle the ball is in, and then adding that time to that circle's
-                 * existing time. */
-//                timeSpentInCircles[currBallCircle] += elapsedTime;
-                else if (showingOutput && finalTimeRecorded == false) {
-                    endTime = System.currentTimeMillis();
-                    elapsedTime = endTime - startTime;
-                    timeSpentInCircles[prevCircle] += elapsedTime;
-
-                    finalTimeRecorded = true;
-                }
-
             }
+
             canvas.drawCircle(HALF_VIEW_WIDTH, HALF_VIEW_HEIGHT, radius, circlePaint);
             if (coloringJustDone) {
                 Paint centerPaint = new Paint();

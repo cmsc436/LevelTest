@@ -66,10 +66,9 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     //metric variables
     float pathLength;
-    float trialDuration;
     float averageDisplacement;
     float metric;
-    float timeSpentInCircle = 0;
+    float timeSpentInCenter = 0;
 
     private static final String spreadsheetId = "1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU";
     private static final String privateSpreadsheetId = "1Do1_GR62ZCAn_qhXXVVafG9_3_3Q0c6yXPyQV07nWZQ";
@@ -80,7 +79,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     public static final int LIB_PLAY_SERVICES_REQUEST_CODE = 1004;
     public static final int LIB_CONNECTION_REQUEST_CODE = 1005;
     Date date;
-    Boolean sentHeatmap;
 
     //boolean for testing if statements
     boolean testing = false;
@@ -271,9 +269,11 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             public void onFinish() {
                 // Finish test: includes unregistering accelerometer sensor listener
                 testRunning = false;
-                trialDuration = (System.currentTimeMillis() - testStartTime) / (float) 1000.00;
                 String timeFinished = String.format(Locale.US, "%s %d", timeLeft, 0);
                 textTimer.setText(timeFinished);
+
+                timeSpentInCenter = System.currentTimeMillis() - ballView.lastTimeStamp;
+
                 if (activityHasFocus) {
                     // Used to reduce "jarring" effect of switching from level to results
                     try {
@@ -294,18 +294,20 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                             @Override
                             public void onClick(View v) {
                                 if(actionType == 3 || testing) {
-                                pathLength = (float) ballView.getTotalPathLength();
+                                    pathLength = (float) ballView.getTotalPathLength();
+                                    timeSpentInCenter += ballView.timeInCenter;
+                                    averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
                                     metric = pathLength +
-                                            timeSpentInCircle +
-                                            averageDisplacement +
-                                            trialDuration;
-                                averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
+                                            timeSpentInCenter +
+                                            averageDisplacement;
+
                                     //sends intent back to front end
                                     Intent intent = new Intent();
                                     intent.putExtra("score", metric);
                                     setResult(RESULT_OK, intent);
 
                                     //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
+                                    Log.i("time", Float.toString(timeSpentInCenter));
                                     sendToSheets();
                                 }
 
@@ -392,7 +394,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     // Sends raw data + images to local sheets/drive
     private void sendToSheets() {
-        float[] trial = {timeSpentInCircle, pathLength, averageDisplacement, trialDuration, metric};
+        float[] trial = {timeSpentInCenter, pathLength, averageDisplacement, metric};
         date = new Date();
         String path = date.toString() + ": Path, " + getHand(trialModeAppendage);
         String heatmap = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
