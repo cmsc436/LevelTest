@@ -58,7 +58,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private Sensor accelerometer;
     private BallView ballView;
     private RadioButton heatmapRadioButton;
-    private boolean testRunning, countdownStopped, listenerUnregisteredOnPause, activityHasFocus;
+    private boolean testRunning, countdownStopped, listenerUnregisteredOnPause, activityHasFocus, doneButtonPressed;
     private CountDownTimer countDownTimer;
     private int difficulty;
     private int actionType;
@@ -318,20 +318,26 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 ballView.drawFinishedView();
                 findViewById(R.id.levelOutputRadioGroup).setVisibility(View.VISIBLE);
                 findViewById(R.id.levelOutputButton).setVisibility(View.VISIBLE);
+                // This flag variable is used to prevent double-clicking the done button (which
+                // could ostensibly cause some weird errors, like things being sent to sheets twice)
+                doneButtonPressed = false;
                 Button done_button = (Button)findViewById(R.id.done_button);
 //                Toast.makeText(LevelActivity.this, Double.valueOf(ballView.getAveragePathLengths()).toString(), Toast.LENGTH_SHORT).show();
                 done_button.setOnClickListener(
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if(actionType == 3 || testing) {
-                                    pathLength = (float) ballView.getTotalPathLength();
-                                    averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
-                                    metric = pathLength + timeSpentInCircle + averageDisplacement + trialDuration;
-                                    sendToSheets();
-                                }
-                                else {
-                                    finish();
+                                if (!doneButtonPressed) {
+                                    doneButtonPressed = true;
+                                    Log.i("adsf", "in onclick of done");
+                                    if (actionType == 3 || testing) {
+                                        pathLength = (float) ballView.getTotalPathLength();
+                                        averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
+                                        metric = pathLength + timeSpentInCircle + averageDisplacement + trialDuration;
+                                        sendToSheets();
+                                    } else {
+                                        finish();
+                                    }
                                 }
                             }
                         });
