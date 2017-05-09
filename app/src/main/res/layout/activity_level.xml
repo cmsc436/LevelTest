@@ -58,6 +58,18 @@
         android:textSize="30dp"
         android:textColor="@color/black"/>
 
+    <TextView android:id="@+id/currentLevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textSize="30sp"
+        android:paddingTop="10dp"
+        android:textColor="@color/black"
+        android:text="@string/difficultyLevel"
+        android:layout_below="@+id/startlevelTestButton"
+        android:visibility="gone"
+        />
+
     <TextView android:id="@+id/currentHand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
