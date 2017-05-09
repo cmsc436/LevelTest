@@ -29,14 +29,9 @@ import edu.umd.cmsc436.sheets.Sheets;
 import edu.umd.cmsc436.frontendhelper.TrialMode;
 
 import android.graphics.Canvas;
-import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Date;
 import java.util.Locale;
-import java.util.logging.Level;
 
 /* NOTE that most of timeTask() and revealTask() were written by Ian for the Tapping Activity,
  * and have been repurposed here (don't give me any credit for those parts).
@@ -65,6 +60,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private String trialModePatientID = null;
     private Sheets.TestType trialModeAppendage = null;
     private Integer trialModeDifficulty = null;
+    private Integer trialNum = null;
+    private Integer trialOutOf = null;
 
     //used for visually defining the center
     Canvas canvas;
@@ -129,6 +126,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         TextView hand = (TextView)findViewById(R.id.currentHand);
         TextView levelView = (TextView)findViewById(R.id.currentLevel);
+        TextView trialNumInfo = (TextView) findViewById(R.id.trialNumberInfo);
 
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
@@ -137,6 +135,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 case "edu.umd.cmsc436.level.action.TRIAL":
                     actionType = 3;
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
+                    // Set hand textview in a compatible-with-translation way
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
                     String handText = hand.getText().toString() + getString(R.string.your);
                     int handStartPos = handText.length() - 1;
@@ -145,8 +144,16 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     ssb.setSpan(new android.text.style.StyleSpan(Typeface.BOLD),
                         handStartPos, handText.length() - 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                     hand.setText(ssb);
+                    // Set difficulty variable and textview
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
                     levelView.append(String.valueOf(trialModeDifficulty));
+                    // Set trial count textview
+                    trialNum = TrialMode.getTrialNum(incomingIntent);
+                    trialOutOf = TrialMode.getTrialOutOf(incomingIntent);
+                    String trialNumInfoStr = trialNumInfo.getText().toString();
+                    trialNumInfoStr += Integer.toString(trialNum) + getString(R.string.of);
+                    trialNumInfoStr += Integer.toString(trialOutOf) + getString(R.string.forthishand);
+                    trialNumInfo.setText(trialNumInfoStr);
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
@@ -164,6 +171,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         if(actionType != 3){
             hand.setVisibility(View.GONE);
             levelView.append(String.valueOf(1));
+            trialNumInfo.setVisibility(View.GONE);
         }
 
         setOutputListener();
@@ -240,6 +248,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         findViewById(R.id.helpButton).setVisibility(View.GONE);
         findViewById(R.id.currentHand).setVisibility(View.GONE);
         findViewById(R.id.currentLevel).setVisibility(View.GONE);
+        findViewById(R.id.trialNumberInfo).setVisibility(View.GONE);
         timeHandler = new Handler();
         timerCount = 3;
 

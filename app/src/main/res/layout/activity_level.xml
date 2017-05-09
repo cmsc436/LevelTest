@@ -18,27 +18,39 @@
         android:layout_centerHorizontal="true"
         android:onClick="startlevelTest" />
 
+    <TextView android:id="@+id/currentLevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textSize="30sp"
+        android:paddingTop="10dp"
+        android:textColor="@color/black"
+        android:text="@string/difficultyLevel"
+        android:layout_below="@+id/startlevelTestButton"
+        />
+
     <TextView android:id="@+id/currentHand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
         android:textSize="30sp"
-        android:paddingTop="20dp"
+        android:paddingTop="10dp"
         android:textColor="@color/black"
         android:text="@string/handPrefix"
         android:layout_below="@+id/currentLevel"
         />
 
-    <TextView android:id="@+id/currentLevel"
+    <TextView android:id="@+id/trialNumberInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
         android:textSize="30sp"
-        android:paddingTop="20dp"
+        android:paddingTop="10dp"
         android:textColor="@color/black"
-        android:text="@string/difficultyLevel"
-        android:layout_below="@+id/startlevelTestButton"
+        android:text="@string/trialPrefix"
+        android:layout_below="@+id/currentHand"
         />
 
     <Button android:id="@+id/helpButton"
