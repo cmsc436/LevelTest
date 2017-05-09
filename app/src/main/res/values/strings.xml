@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Level Test</string>
+    <string name="app_name_for_sheets">LevelTest</string>
 
     <string name="startTest">Start</string>
     <string name="timeLeft">Time Left: </string>
@@ -7,7 +8,7 @@
     <string name="done">Done</string>
     <string name="history">See History</string>
 
-    <string name="directionsHeader">Level Directions</string>
+    <string name="directionsHeader">Level Test Directions</string>
 
     <string name="levelDirections">Hold this device in your %1$s with the screen flat and facing up.\n\nAfter
         a 3 second countdown, you will have 10 seconds to move the ball to the center (shaded green), holding
@@ -18,6 +19,17 @@
     <string name="moveToCenter">Move the ball to the center circle.</string>
     <string name="holdInCenter">Hold the ball in the center circle for the test duration.</string>
 
+    <string name="handPrefix">For this test, hold the device in</string>
+    <string name="your">&#160;your&#160;</string>
+    <string name="leftHand">left hand</string>
+    <string name="rightHand">right hand</string>
+    <string name="unspecifiedHand">hand</string>
+    <string name="period">.</string>
+    <string name="hand">Hand:&#160;</string>
+    <string name="difficultyLevel">Difficulty level:&#160;</string>
+
     <string name="imageFolder">0BymPSywiUM4aVGw5YlQ3ZTlhYVE</string>
+    <string name="centralSheetID">1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU</string>
+    <string name="privateSheetID">1Do1_GR62ZCAn_qhXXVVafG9_3_3Q0c6yXPyQV07nWZQ</string>
 
 </resources>

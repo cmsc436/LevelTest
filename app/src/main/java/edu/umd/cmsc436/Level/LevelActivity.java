@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -14,7 +15,11 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -53,7 +58,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private Sensor accelerometer;
     private BallView ballView;
     private RadioButton heatmapRadioButton;
-    private boolean testRunning, countdownStopped, listenerUnregisteredOnPause, activityHasFocus;
+    private boolean testRunning, countdownStopped, listenerUnregisteredOnPause, activityHasFocus, doneButtonPressed;
     private CountDownTimer countDownTimer;
     private int difficulty;
     private int actionType;
@@ -70,8 +75,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     float metric;
     float timeSpentInCenter = 0;
 
-    private static final String spreadsheetId = "1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU";
-    private static final String privateSpreadsheetId = "1Do1_GR62ZCAn_qhXXVVafG9_3_3Q0c6yXPyQV07nWZQ";
     private Sheets sheet;
     public static final int LIB_ACCOUNT_NAME_REQUEST_CODE = 1001;
     public static final int LIB_AUTHORIZATION_REQUEST_CODE = 1002;
@@ -79,6 +82,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     public static final int LIB_PLAY_SERVICES_REQUEST_CODE = 1004;
     public static final int LIB_CONNECTION_REQUEST_CODE = 1005;
     Date date;
+    Boolean sentHeatmap;
+    private int dataChunksSent;
 
     //boolean for testing if statements
     boolean testing = false;
@@ -92,7 +97,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         heatmapRadioButton = (RadioButton) findViewById(R.id.heatmapRadioButton);
 
         // Sheets stuff
-        sheet = new Sheets(this, this, getString(R.string.app_name), spreadsheetId, privateSpreadsheetId);
+        sheet = new Sheets(this, this, getString(R.string.app_name_for_sheets),
+            getString(R.string.centralSheetID), getString(R.string.privateSheetID));
 
         // instance of "this" used for changing registration of this activity as a
         // SensorEventListener from within Runnables
@@ -114,6 +120,16 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
 
+        // Data sent to local sheets/folder.
+        // ranges from 0 to 3:
+        // 1st piece of data is writing to local sheets
+        // 2nd piece of data is uploading path image to folder
+        // 3rd piece of data is uploading heatmap image to folder
+        dataChunksSent = 0;
+
+        TextView hand = (TextView)findViewById(R.id.currentHand);
+        TextView levelView = (TextView)findViewById(R.id.currentLevel);
+
         Intent incomingIntent = getIntent();
         String action = incomingIntent.getAction();
         if (action != null){
@@ -122,7 +138,15 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     actionType = 3;
                     trialModePatientID = TrialMode.getPatientId(incomingIntent);
                     trialModeAppendage = TrialMode.getAppendage(incomingIntent);
+                    String handText = hand.getText().toString() + getString(R.string.your);
+                    int handStartPos = handText.length() - 1;
+                    handText += getHand(trialModeAppendage) + getString(R.string.period);
+                    SpannableStringBuilder ssb = new SpannableStringBuilder(handText);
+                    ssb.setSpan(new android.text.style.StyleSpan(Typeface.BOLD),
+                        handStartPos, handText.length() - 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+                    hand.setText(ssb);
                     trialModeDifficulty = TrialMode.getDifficulty(incomingIntent);
+                    levelView.append(String.valueOf(trialModeDifficulty));
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
@@ -133,7 +157,13 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 case "edu.umd.cmsc436.level.action.HISTORY":
                     actionType = 0;
                     break;
+                default:
+                    actionType = -1;
             }
+        }
+        if(actionType != 3){
+            hand.setVisibility(View.GONE);
+            levelView.append(String.valueOf(1));
         }
 
         setOutputListener();
@@ -161,10 +191,14 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     }
 
     private String getHand(Sheets.TestType testType) {
-        if (testType == Sheets.TestType.LH_LEVEL) {
-            return "left hand";
-        }else{
-            return "right hand";
+        if (actionType == 3) {
+            if (testType == Sheets.TestType.LH_LEVEL) {
+                return getString(R.string.leftHand);
+            } else {
+                return getString(R.string.rightHand);
+            }
+        } else {
+            return getString(R.string.unspecifiedHand);
         }
     }
 
@@ -182,7 +216,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
         TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
-        textView.setTextSize(30);
+        textView.setTextSize(20);
+        textView.setGravity(Gravity.CENTER);
     }
 
     private void setDifficulty() {
@@ -202,6 +237,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         ballView.setVisibility(View.GONE); // just to be safe
         findViewById(R.id.startlevelTestButton).setVisibility(View.GONE);
         findViewById(R.id.helpButton).setVisibility(View.GONE);
+        findViewById(R.id.currentHand).setVisibility(View.GONE);
+        findViewById(R.id.currentLevel).setVisibility(View.GONE);
         timeHandler = new Handler();
         timerCount = 3;
 
@@ -287,31 +324,35 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 ballView.drawFinishedView();
                 findViewById(R.id.levelOutputRadioGroup).setVisibility(View.VISIBLE);
                 findViewById(R.id.levelOutputButton).setVisibility(View.VISIBLE);
+                // This flag variable is used to prevent double-clicking the done button (which
+                // could ostensibly cause some weird errors, like things being sent to sheets twice)
+                doneButtonPressed = false;
                 Button done_button = (Button)findViewById(R.id.done_button);
 //                Toast.makeText(LevelActivity.this, Double.valueOf(ballView.getAveragePathLengths()).toString(), Toast.LENGTH_SHORT).show();
                 done_button.setOnClickListener(
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if(actionType == 3 || testing) {
-                                    pathLength = (float) ballView.getTotalPathLength();
-                                    timeSpentInCenter += ballView.timeInCenter;
-                                    averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
-                                    metric = pathLength +
-                                            timeSpentInCenter +
-                                            averageDisplacement;
+                                if (!doneButtonPressed) {
+                                    doneButtonPressed = true;
+                                    if (actionType == 3 || testing) {
+                                        pathLength = (float) ballView.getTotalPathLength();
+                                        averageDisplacement = (float) ballView.getBallPositionMeasurementMean();
+                                        metric = pathLength +
+                                                timeSpentInCenter +
+                                                averageDisplacement;
 
-                                    //sends intent back to front end
-                                    Intent intent = new Intent();
-                                    intent.putExtra("score", metric);
-                                    setResult(RESULT_OK, intent);
+                                        //sends intent back to front end
+                                        Intent intent = new Intent();
+                                        intent.putExtra("score", metric);
+                                        setResult(RESULT_OK, intent);
 
-                                    //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
-                                    Log.i("time", Float.toString(timeSpentInCenter));
-                                    sendToSheets();
+                                        //Toast.makeText(LevelActivity.this, "new apk2", Toast.LENGTH_SHORT).show();
+                                        sendToSheets();
+                                    } else {
+                                        finish();
+                                    }
                                 }
-
-                                //finish();
                             }
                         });
                 done_button.setVisibility(View.VISIBLE);
@@ -394,20 +435,34 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     // Sends raw data + images to local sheets/drive
     private void sendToSheets() {
-        float[] trial = {timeSpentInCenter, pathLength, averageDisplacement, metric};
-        date = new Date();
-        String path = date.toString() + ": Path, " + getHand(trialModeAppendage);
-        String heatmap = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
-
-        if (testing) {
-            trialModeAppendage = Sheets.TestType.LH_LEVEL;
-            trialModePatientID = "test";
+        switch(dataChunksSent) {
+            case 0:
+                Log.i(getClass().getSimpleName(), "Writing trial data");
+                // write trial data
+                float[] trial = {timeSpentInCircle, pathLength, averageDisplacement, trialDuration, metric};
+                date = new Date();
+                sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
+                break;
+            case 1:
+                Log.i(getClass().getSimpleName(), "Uploading path file");
+                // upload path bitmap
+                String pathFilename = date.toString() + ": Path, " + getHand(trialModeAppendage);
+                sheet.uploadToDrive(getString(R.string.imageFolder), pathFilename, ballView.pathBitmap);
+                break;
+            case 2:
+                Log.i(getClass().getSimpleName(), "Uploading heatmap file");
+                // upload heatmap bitmap
+                String heatmapFilename = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
+                sheet.uploadToDrive(getString(R.string.imageFolder), heatmapFilename, ballView.heatmapBitmap);
+                break;
+            default:
+                // Done sending data using our instance of the Sheets class
+                Log.i(getClass().getSimpleName(), "Done");
+                // Send intent with our overall "metric" score back to the front end
+                setResult(RESULT_OK, TrialMode.getResultIntent(metric));
+                finish();
         }
 
-        // TODO send heatmap image when drive errors stop being a thing
-        sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-        sheet.uploadToDrive(getString(R.string.imageFolder), path, ballView.pathBitmap);
-        //sheet.uploadToDrive(getString(R.string.imageFolder), heatmap, ballView.heatmapBitmap);
     }
 
     @Override
@@ -428,14 +483,17 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }
     }
 
+    // Called when sending some local stuff (i.e. writing data to the local spreadsheet, or
+    // uploading to drive) is done.
     @Override
     public void notifyFinished(Exception e) {
         if (e != null) {
             throw new RuntimeException(e);
         }
-
-        Log.i(getClass().getSimpleName(), "Done");
-        finish();
+        dataChunksSent++;
+        // Attempt to send more data -- if no data is left to be sent, then the activity will be
+        // gracefully finish()ed
+        sendToSheets();
     }
 
     @Override
