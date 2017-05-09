@@ -84,6 +84,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     public static final int LIB_CONNECTION_REQUEST_CODE = 1005;
     Date date;
     Boolean sentHeatmap;
+    private int dataChunksSent;
 
     //boolean for testing if statements
     boolean testing = false;
@@ -119,6 +120,13 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // used to avoid unregistering the listener twice (if the test ends while the app is paused)
         listenerUnregisteredOnPause = false;
         timeLeft = getString(R.string.timeLeft);
+
+        // Data sent to local sheets/folder.
+        // ranges from 0 to 3:
+        // 1st piece of data is writing to local sheets
+        // 2nd piece of data is uploading path image to folder
+        // 3rd piece of data is uploading heatmap image to folder
+        dataChunksSent = 0;
 
         TextView hand = (TextView)findViewById(R.id.currentHand);
         TextView levelView = (TextView)findViewById(R.id.currentLevel);
@@ -421,26 +429,34 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
     // Sends raw data + images to local sheets/drive
     private void sendToSheets() {
-        float[] trial = {timeSpentInCircle, pathLength, averageDisplacement, trialDuration, metric};
-        date = new Date();
-        String path = date.toString() + ": Path, " + getHand(trialModeAppendage);
-        String heatmap = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
-
-        if (testing) {
-            trialModeAppendage = Sheets.TestType.LH_LEVEL;
-            trialModePatientID = "test";
+        switch(dataChunksSent) {
+            case 0:
+                Log.i(getClass().getSimpleName(), "Writing trial data");
+                // write trial data
+                float[] trial = {timeSpentInCircle, pathLength, averageDisplacement, trialDuration, metric};
+                date = new Date();
+                sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
+                break;
+            case 1:
+                Log.i(getClass().getSimpleName(), "Uploading path file");
+                // upload path bitmap
+                String pathFilename = date.toString() + ": Path, " + getHand(trialModeAppendage);
+                sheet.uploadToDrive(getString(R.string.imageFolder), pathFilename, ballView.pathBitmap);
+                break;
+            case 2:
+                Log.i(getClass().getSimpleName(), "Uploading heatmap file");
+                // upload heatmap bitmap
+                String heatmapFilename = date.toString() + ": Heatmap, " + getHand(trialModeAppendage);
+                sheet.uploadToDrive(getString(R.string.imageFolder), heatmapFilename, ballView.heatmapBitmap);
+                break;
+            default:
+                // Done sending data using our instance of the Sheets class
+                Log.i(getClass().getSimpleName(), "Done");
+                // Send intent with our overall "metric" score back to the front end
+                setResult(RESULT_OK, TrialMode.getResultIntent(metric));
+                finish();
         }
 
-        // Send raw data to local sheets
-        sheet.writeTrials(trialModeAppendage, trialModePatientID, trial);
-        // Send images of the path and heatmap, respectively
-        // TODO: There's a bug in the drive functionality somewhere where the following two commands
-        // result in two images of the heatmap (with the same filename) being uploaded. Might be rectifiable
-        // by chaining another command from within notifyFinished() (race condition somewhere?)
-        sheet.uploadToDrive(getString(R.string.imageFolder), path, ballView.pathBitmap);
-        //sheet.uploadToDrive(getString(R.string.imageFolder), heatmap, ballView.heatmapBitmap);
-        //setResult(RESULT_OK, TrialMode.getResultIntent(metric));
-        //finish();
     }
 
     @Override
@@ -461,17 +477,17 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         }
     }
 
-    // Called when sending local stuff to sheets is done.
+    // Called when sending some local stuff (i.e. writing data to the local spreadsheet, or
+    // uploading to drive) is done.
     @Override
     public void notifyFinished(Exception e) {
         if (e != null) {
             throw new RuntimeException(e);
         }
-
-        Log.i(getClass().getSimpleName(), "Done");
-        // Send intent with our overall "metric" score back to the front end
-        setResult(RESULT_OK, TrialMode.getResultIntent(metric));
-        finish();
+        dataChunksSent++;
+        // Attempt to send more data -- if no data is left to be sent, then the activity will be
+        // gracefully finish()ed
+        sendToSheets();
     }
 
     @Override
