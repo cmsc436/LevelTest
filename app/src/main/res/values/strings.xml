@@ -28,9 +28,9 @@
     <string name="unspecifiedHand">hand</string>
     <string name="period">.</string>
     <string name="difficultyLevel">Difficulty level:&#160;</string>
-    <string name="trialPrefix">This is trial&#160;</string>
+    <string name="trialPrefix">Trial&#160;</string>
     <string name="of">&#160;of&#160;</string>
-    <string name="forthishand">&#160;for that hand.</string>
+    <string name="forthishand">&#160;for current hand.</string>
 
     <string name="imageFolder">0BymPSywiUM4aVGw5YlQ3ZTlhYVE</string>
     <string name="centralSheetID">1YvI3CjS4ZlZQDYi5PaiA7WGGcoCsZfLoSFM0IdvdbDU</string>

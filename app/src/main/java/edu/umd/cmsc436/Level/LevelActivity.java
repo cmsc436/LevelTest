@@ -140,6 +140,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     trialNumInfoStr += Integer.toString(trialNum) + getString(R.string.of);
                     trialNumInfoStr += Integer.toString(trialOutOf) + getString(R.string.forthishand);
                     trialNumInfo.setText(trialNumInfoStr);
+                    trialNumInfo.setTypeface(trialNumInfo.getTypeface(), Typeface.ITALIC);
+                    trialNumInfo.setVisibility(View.VISIBLE);
                     break;
                 case "edu.umd.cmsc436.level.action.PRACTICE":
                     actionType = 2;
@@ -159,9 +161,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                 default:
                     actionType = -1;
             }
-        }
-        if(actionType != 3){
-            trialNumInfo.setVisibility(View.GONE);
         }
 
         setOutputListener();
