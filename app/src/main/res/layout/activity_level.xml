@@ -80,8 +80,7 @@
         android:textColor="@color/black"
         android:text="@string/handPrefix"
         android:layout_below="@+id/currentLevel"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <TextView android:id="@+id/trialNumberInfo"
         android:layout_width="wrap_content"
