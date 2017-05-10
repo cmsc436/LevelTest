@@ -6,13 +6,16 @@
     <string name="timeLeft">Time Left: </string>
     <string name="ready">Get ready&#8230;</string>
     <string name="done">Done</string>
-    <string name="history">See History</string>
 
     <string name="directionsHeader">Level Test Directions</string>
     <string name="levelDirections">Hold this device in your %1$s with the screen flat and facing up.\n\nAfter
         a 3 second countdown, you will have 10 seconds to move the ball to the center (shaded green), holding
         it steady once in the center.</string>
     <string name="diffHeader">Select a difficulty for practice (1 being the easiest):</string>
+
+    <string name="history">Level Test History for %1$s</string>
+    <string name="back">Home</string>
+    <string name="link">https://drive.google.com/drive/u/0/folders/0BymPSywiUM4aVGw5YlQ3ZTlhYVE</string>
 
     <string name="pathOutput">Path</string>
     <string name="heatmapOutput">Heatmap</string>

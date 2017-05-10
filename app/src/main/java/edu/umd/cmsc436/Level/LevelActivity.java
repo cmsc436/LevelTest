@@ -156,7 +156,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     break;
                 case "edu.umd.cmsc436.level.action.HISTORY":
                     actionType = 0;
-                    showHistory();
+                    showHistory(TrialMode.getPatientId(incomingIntent));
                     break;
                 default:
                     actionType = -1;
@@ -228,7 +228,22 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         textView.setTextSize(25);
     }
 
-    private void showHistory() {
+    private void showHistory(String pid) {
+        findViewById(R.id.startlevelTestButton).setVisibility(View.GONE);
+        findViewById(R.id.helpButton).setVisibility(View.GONE);
+        findViewById(R.id.historyHeader).setVisibility(View.VISIBLE);
+        findViewById(R.id.history).setVisibility(View.VISIBLE);
+        Button back = (Button) findViewById(R.id.history_back);
+        back.setVisibility(View.VISIBLE);
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+        ((TextView)findViewById(R.id.historyHeader)).setText(
+                String.format(getResources().getString(R.string.history), pid));
 
     }
 

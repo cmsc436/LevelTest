@@ -187,4 +187,37 @@
         android:indeterminate="true"
         android:visibility="gone" />
 
+    <TextView android:id="@+id/historyHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:text=""
+        android:textSize="23dp"
+        android:textColor="@color/black"
+        android:visibility="gone"/>
+
+    <TextView android:id="@+id/history"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_below="@id/historyHeader"
+        android:autoLink="web"
+        android:text="@string/link"
+        android:textSize="20dp"
+        android:visibility="gone"/>
+
+    <Button android:id="@+id/history_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="30sp"
+        android:text="@string/back"
+        android:padding="20dp"
+        android:textColor="@android:color/white"
+        android:background="@color/colorAccent436"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
+
 </RelativeLayout>
