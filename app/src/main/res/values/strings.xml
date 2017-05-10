@@ -12,7 +12,7 @@
     <string name="levelDirections">Hold this device in your %1$s with the screen flat and facing up.\n\nAfter
         a 3 second countdown, you will have 10 seconds to move the ball to the center (shaded green), holding
         it steady once in the center.</string>
-    <string name="diffHeader">Select a difficulty\n (1 being the easiest):</string>
+    <string name="diffHeader">Select a difficulty for practice (1 being the easiest):</string>
 
     <string name="pathOutput">Path</string>
     <string name="heatmapOutput">Heatmap</string>

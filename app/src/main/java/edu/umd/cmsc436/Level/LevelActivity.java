@@ -23,8 +23,6 @@ import android.widget.TextView;
 import edu.umd.cmsc436.sheets.Sheets;
 import edu.umd.cmsc436.frontendhelper.TrialMode;
 
-import android.graphics.Canvas;
-
 import java.util.Date;
 import java.util.Locale;
 
@@ -46,7 +44,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private Sensor accelerometer;
     private BallView ballView;
     private RadioButton heatmapRadioButton;
-    private boolean testRunning, countdownStopped, listenerUnregisteredOnPause, activityHasFocus, doneButtonPressed;
+    private boolean testRunning, listenerUnregisteredOnPause, activityHasFocus, doneButtonPressed;
     private CountDownTimer countDownTimer;
     private int difficulty;
     private int actionType;
@@ -98,8 +96,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         ballView.setParentActivity(this);
         // boolean that records whether or not the user is in the middle of the actual test
         testRunning = false;
-        // boolean that records whether or not the user has stopped a partial countdown from finishing
-        countdownStopped = false;
         // boolean that records whether or not we've unregistered the listener from onPause()
         // used to avoid unregistering the listener twice (if the test ends while the app is paused)
         listenerUnregisteredOnPause = false;
@@ -151,12 +147,16 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
                     findViewById(R.id.diffHeader).setVisibility(View.VISIBLE);
                     break;
                 case "edu.umd.cmsc436.level.action.HELP":
-                    actionType = 1;
+                    actionType = 2;
                     showInstructions();
-                    finish();
+
+                    //show difficulty menu to start practice mode
+                    findViewById(R.id.diffGroup).setVisibility(View.VISIBLE);
+                    findViewById(R.id.diffHeader).setVisibility(View.VISIBLE);
                     break;
                 case "edu.umd.cmsc436.level.action.HISTORY":
                     actionType = 0;
+                    showHistory();
                     break;
                 default:
                     actionType = -1;
@@ -217,7 +217,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
 
         builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                // if this button is clicked, close current activity
+                if (actionType == 1)
+                    finish();
             }
         });
 
@@ -225,6 +226,10 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         alertDialog.show();
         TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
         textView.setTextSize(25);
+    }
+
+    private void showHistory() {
+
     }
 
     private void setDifficulty() {
@@ -294,13 +299,6 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             testStartTime = System.currentTimeMillis();
         }
     };
-
-    public void stopCountdownTimer() {
-        secondsLeft = 0;
-        countDownTimer.cancel();
-        textTimer.setText(getString(R.string.holdInCenter));
-        countdownStopped = true;
-    }
 
     public void startCountdownTimer() {
         secondsLeft = 0;
@@ -447,6 +445,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             trialModeAppendage = Sheets.TestType.LH_LEVEL;
             trialModePatientID = "test";
         }
+
+        findViewById(R.id.dataSendingProgressBar).setVisibility(View.VISIBLE);
 
         float[] trial = {timeSpentInCenter, pathLength, averageDisplacement, metric};
         date = new Date();
