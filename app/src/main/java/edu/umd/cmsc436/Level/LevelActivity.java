@@ -45,7 +45,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     private BallView ballView;
     private RadioButton heatmapRadioButton;
     private boolean testRunning, listenerUnregisteredOnPause, activityHasFocus, doneButtonPressed;
-    private CountDownTimer countDownTimer;
+    private boolean testOrCountdownRunning;
+    private CountDownTimer countDownTimer = null;
     private int difficulty;
     private int actionType;
     private String trialModePatientID = null;
@@ -96,6 +97,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         ballView.setParentActivity(this);
         // boolean that records whether or not the user is in the middle of the actual test
         testRunning = false;
+        // same as above, but includes the "Get ready" countdown
+        testOrCountdownRunning = false;
         // boolean that records whether or not we've unregistered the listener from onPause()
         // used to avoid unregistering the listener twice (if the test ends while the app is paused)
         listenerUnregisteredOnPause = false;
@@ -278,6 +281,8 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         timerCount = 3;
 
         timeHandler.removeCallbacks(timeTask);
+        timeHandler.removeCallbacks(revealTask);
+        testOrCountdownRunning = true;
         textCountdown.setText(getString(R.string.ready));
         timeHandler.postDelayed(timeTask, 1000);
         timeHandler.postDelayed(timeTask, 2000);
@@ -331,6 +336,7 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
             public void onFinish() {
                 // Finish test: includes unregistering accelerometer sensor listener
                 testRunning = false;
+                testOrCountdownRunning = false;
                 String timeFinished = String.format(Locale.US, "%s %d", timeLeft, 0);
                 textTimer.setText(timeFinished);
 
@@ -411,10 +417,13 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
     protected void onPause() {
         super.onPause();
         activityHasFocus = false;
-        if (testRunning) {
-            sensorManager.unregisterListener(this);
-            listenerUnregisteredOnPause = true;
+        if (testOrCountdownRunning) {
+            if (testRunning) {
+                sensorManager.unregisterListener(this);
+                listenerUnregisteredOnPause = true;
 //            Log.i("hi", "Unregistered listener on pause");
+            }
+            cancelInProgressTest();
         }
     }
 
@@ -446,13 +455,16 @@ public class LevelActivity extends AppCompatActivity implements SensorEventListe
         // the accelerometer sensor)
     }
 
-     @Override
-     public void onBackPressed() {
-         //updated per front end specification
-         Intent intent = getIntent();
-         setResult(RESULT_CANCELED, intent);
-         finish();
-     }
+    private void cancelInProgressTest() {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+        timeHandler.removeCallbacks(timeTask);
+        timeHandler.removeCallbacks(revealTask);
+        Intent intent = getIntent();
+        setResult(RESULT_CANCELED, intent);
+        finish();
+    }
 
     // Sends raw data + images to local sheets/drive
     private void sendToSheets() {
